@@ -1,4 +1,4 @@
 fn main() {
-    // Forced rebuild to pick up new icons (v2 with proper stroke-width)
+    // Forced rebuild to pick up reverted solid black icon
     tauri_build::build()
 }

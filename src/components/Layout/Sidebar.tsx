@@ -37,10 +37,9 @@ export function Sidebar() {
 
   return (
     <ShadcnSidebar variant="inset">
-      <SidebarHeader className="border-b border-border p-4">
-        <Link to="/" className="flex items-center gap-2.5 px-0.5 mt-0.5 mb-1 opacity-90 hover:opacity-100 transition-opacity">
-          <MuvloMark className="size-7" />
-          <span className="text-[17px] font-semibold tracking-tight text-sidebar-foreground">Muvlo</span>
+      <SidebarHeader className="px-5 pt-6 pb-2">
+        <Link to="/" className="flex items-center w-fit opacity-80 hover:opacity-100 transition-opacity">
+          <MuvloMark key="hmr-flush" className="size-7" />
         </Link>
       </SidebarHeader>
       <SidebarContent>

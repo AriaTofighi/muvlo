@@ -4,6 +4,7 @@ use rfd::FileDialog;
 use serde::{Deserialize, Serialize};
 use std::{
     collections::HashMap,
+    env,
     fs,
     path::{Path, PathBuf},
     process::Stdio,
@@ -12,7 +13,7 @@ use std::{
         Arc, OnceLock,
     },
 };
-use tauri::{AppHandle, Emitter, State};
+use tauri::{AppHandle, Emitter, Manager, State};
 use tokio::{
     io::{AsyncBufReadExt, BufReader},
     process::Command,
@@ -21,6 +22,8 @@ use tokio::{
 
 const JOB_PROGRESS_EVENT: &str = "job-progress";
 const JOB_COMPLETE_EVENT: &str = "job-complete";
+const FFMPEG_ENV_NAME: &str = "MUVLO_FFMPEG_PATH";
+const FFPROBE_ENV_NAME: &str = "MUVLO_FFPROBE_PATH";
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -205,6 +208,16 @@ enum MediaFlavor {
     Unknown,
 }
 
+pub fn configure_tool_paths<R: tauri::Runtime>(app: &AppHandle<R>) {
+    if let Some(ffmpeg_path) = resolve_bundled_tool_path(app, ffmpeg_resource_relative_path("ffmpeg")) {
+        env::set_var(FFMPEG_ENV_NAME, ffmpeg_path);
+    }
+
+    if let Some(ffprobe_path) = resolve_bundled_tool_path(app, ffmpeg_resource_relative_path("ffprobe")) {
+        env::set_var(FFPROBE_ENV_NAME, ffprobe_path);
+    }
+}
+
 #[tauri::command]
 pub async fn pick_input_files(
     multiple: bool,
@@ -266,11 +279,11 @@ pub async fn pick_output_path(suggested_name: Option<String>) -> Result<Option<S
 
 #[tauri::command]
 pub async fn get_media_tool_status() -> Result<MediaToolStatus, String> {
-    let ffmpeg_available = tool_available("MUVLO_FFMPEG_PATH", "ffmpeg").await;
-    let ffprobe_available = tool_available("MUVLO_FFPROBE_PATH", "ffprobe").await;
+    let ffmpeg_available = tool_available(FFMPEG_ENV_NAME, "ffmpeg").await;
+    let ffprobe_available = tool_available(FFPROBE_ENV_NAME, "ffprobe").await;
 
-    let ffmpeg_version = tool_version("MUVLO_FFMPEG_PATH", "ffmpeg").await;
-    let ffprobe_version = tool_version("MUVLO_FFPROBE_PATH", "ffprobe").await;
+    let ffmpeg_version = tool_version(FFMPEG_ENV_NAME, "ffmpeg").await;
+    let ffprobe_version = tool_version(FFPROBE_ENV_NAME, "ffprobe").await;
 
     Ok(MediaToolStatus {
         ffmpeg_available,
@@ -376,7 +389,7 @@ async fn execute_media_job(
         None,
     )?;
 
-    let mut command = Command::new(tool_path("MUVLO_FFMPEG_PATH", "ffmpeg"));
+    let mut command = Command::new(tool_path(FFMPEG_ENV_NAME, "ffmpeg"));
     command.args(&plan.args);
     command.stderr(Stdio::piped());
     command.stdout(Stdio::null());
@@ -784,7 +797,7 @@ fn detect_media_flavor(path: &Path) -> MediaFlavor {
 fn futures_lite_probe(path: &Path) -> Option<bool> {
     let path_string = path.to_string_lossy().to_string();
 
-    if let Ok(output) = std::process::Command::new(tool_path("MUVLO_FFPROBE_PATH", "ffprobe"))
+    if let Ok(output) = std::process::Command::new(tool_path(FFPROBE_ENV_NAME, "ffprobe"))
         .args([
             "-v",
             "quiet",
@@ -1039,6 +1052,45 @@ async fn tool_version(env_name: &str, default: &str) -> Option<String> {
 
 fn tool_path(env_name: &str, default: &str) -> String {
     std::env::var(env_name).unwrap_or_else(|_| default.to_string())
+}
+
+fn resolve_bundled_tool_path<R: tauri::Runtime>(
+    app: &AppHandle<R>,
+    relative_path: &'static str,
+) -> Option<String> {
+    if let Ok(resource_dir) = app.path().resource_dir() {
+        let resource_path = resource_dir.join(relative_path);
+        if resource_path.is_file() {
+            return Some(resource_path.to_string_lossy().to_string());
+        }
+    }
+
+    if cfg!(debug_assertions) {
+        let dev_path = Path::new(env!("CARGO_MANIFEST_DIR")).join(relative_path);
+        if dev_path.is_file() {
+            return Some(dev_path.to_string_lossy().to_string());
+        }
+    }
+
+    None
+}
+
+fn ffmpeg_resource_relative_path(tool: &str) -> &'static str {
+    match (std::env::consts::OS, std::env::consts::ARCH, tool) {
+        ("windows", "x86_64", "ffmpeg") => "bin/win-x64/ffmpeg.exe",
+        ("windows", "x86_64", "ffprobe") => "bin/win-x64/ffprobe.exe",
+        ("windows", _, "ffmpeg") => "bin/win-x64/ffmpeg.exe",
+        ("windows", _, "ffprobe") => "bin/win-x64/ffprobe.exe",
+        ("macos", "aarch64", "ffmpeg") => "bin/macos-aarch64/ffmpeg",
+        ("macos", "aarch64", "ffprobe") => "bin/macos-aarch64/ffprobe",
+        ("macos", "x86_64", "ffmpeg") => "bin/macos-x64/ffmpeg",
+        ("macos", "x86_64", "ffprobe") => "bin/macos-x64/ffprobe",
+        ("linux", "x86_64", "ffmpeg") => "bin/linux-x64/ffmpeg",
+        ("linux", "x86_64", "ffprobe") => "bin/linux-x64/ffprobe",
+        (_, _, "ffmpeg") => "ffmpeg",
+        (_, _, "ffprobe") => "ffprobe",
+        _ => "ffmpeg",
+    }
 }
 
 fn default_quality() -> u8 {
