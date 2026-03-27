@@ -1,6 +1,6 @@
 # Muvlo 🌊
 
-A sleek, open-source desktop application that provides a modern, intuitive UI on top of FFmpeg's powerful media processing engine. The name **Muvlo** ("move" + flow) reflects the app's goal: making media flow effortlessly.
+An open-source, local-first desktop media utility for everyday FFmpeg tasks, designed for people who want modern UX instead of legacy tooling.
 
 Built with **Tauri v2**, **React**, **TypeScript**, and **shadcn/ui**.
 

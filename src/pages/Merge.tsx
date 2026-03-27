@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { FileDropZone } from "@/components/FileDropZone";
 import { Input } from "@/components/ui/input";
-import { Combine, Folder, GripVertical, Plus, Save, Square, Trash2 } from "lucide-react";
+import { Combine, Folder, GripVertical, Plus, Save, Square, Trash2, FileVideo } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { toast } from "sonner";
 import { useJobStore } from "@/stores/jobStore";
@@ -121,28 +121,41 @@ export function Merge() {
         </CardHeader>
         <CardContent className="space-y-4">
           {activeFile && (
-            <div className="flex items-center justify-between rounded-md border border-border/60 bg-muted/30 px-4 py-3 text-sm">
-              <div className="min-w-0">
-                <p className="font-medium">Current source</p>
-                <p className="truncate text-muted-foreground">{activeFile.name}</p>
+            <div className="flex items-center justify-between p-3 border rounded-xl bg-muted/10">
+              <div className="flex items-center gap-3 min-w-0">
+                <div className="flex shrink-0 items-center justify-center p-2 rounded-lg border bg-background">
+                  <FileVideo className="h-4 w-4 text-muted-foreground" />
+                </div>
+                <div className="min-w-0">
+                  <p className="font-medium text-sm text-foreground truncate">{activeFile.name}</p>
+                  <p className="text-xs text-muted-foreground/70">Current workspace source</p>
+                </div>
               </div>
-              <Button variant="secondary" onClick={useActiveFileForMerge}>
-                <Plus className="mr-2 h-4 w-4" /> Add
+              <Button variant="outline" size="sm" onClick={useActiveFileForMerge} className="h-8 shadow-none border-border/50">
+                <Plus className="mr-2 h-3.5 w-3.5" /> Add to list
               </Button>
             </div>
           )}
 
           {files.length > 0 && (
-            <div className="flex flex-col gap-2 rounded-md border p-2">
+            <div className="flex flex-col gap-2 p-1 border rounded-xl bg-muted/5">
               {files.map((file) => (
-                <div key={file.path} className="flex items-center gap-3 rounded-md bg-muted/50 p-2 text-sm shadow-sm border">
-                  <GripVertical className="h-4 w-4 text-muted-foreground" />
-                  <span className="flex-1 truncate">{file.name}</span>
-                  <Button variant="ghost" size="icon-sm" onClick={() => removeMergeFile(file.path)}>
-                    <Trash2 className="h-4 w-4 text-destructive" />
+                <div key={file.path} className="flex items-center gap-3 p-2 rounded-lg border bg-background shadow-sm group transition-all">
+                  <GripVertical className="h-4 w-4 text-muted-foreground/40 cursor-grab active:cursor-grabbing" />
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-medium truncate">{file.name}</p>
+                    <p className="text-[10px] text-muted-foreground/60 font-mono truncate lowercase">{file.path}</p>
+                  </div>
+                  <Button variant="ghost" size="icon" onClick={() => removeMergeFile(file.path)} className="h-8 w-8 text-muted-foreground hover:text-destructive hover:bg-destructive/5">
+                    <Trash2 className="h-4 w-4" />
                   </Button>
                 </div>
               ))}
+              <div className="flex justify-end pt-1 pr-1">
+                <Button variant="ghost" size="sm" onClick={clearMergeFiles} className="h-7 text-xs text-muted-foreground hover:text-foreground">
+                  Clear List
+                </Button>
+              </div>
             </div>
           )}
 
@@ -167,7 +180,7 @@ export function Merge() {
             className="p-6"
           />
 
-          <div className="grid gap-2">
+          <div className="grid gap-2 pt-4">
             <span className="text-sm font-medium">Output Path</span>
             <div className="flex flex-col gap-3 sm:flex-row">
               <Input value={outputPath} onChange={(event) => setOutputPath(event.target.value)} placeholder="Choose where to save the merged file" />
@@ -176,14 +189,6 @@ export function Merge() {
               </Button>
             </div>
           </div>
-
-          {files.length > 0 && (
-            <div className="flex justify-end">
-              <Button variant="ghost" size="sm" onClick={clearMergeFiles}>
-                Clear List
-              </Button>
-            </div>
-          )}
         </CardContent>
       </Card>
 
@@ -203,18 +208,18 @@ export function Merge() {
           </CardContent>
         </Card>
       ) : currentJob?.status === "completed" ? (
-        <Card className="border-green-500/40">
-          <CardContent className="pt-6">
+        <Card className="border-success/40 bg-success/5">
+          <CardContent className="p-4">
             <div className="flex items-center justify-between gap-4">
               <div className="min-w-0">
-                <p className="font-medium text-green-600 dark:text-green-400">Merge completed</p>
+                <p className="font-medium text-success">Merge completed</p>
                 <p className="truncate text-sm text-muted-foreground">{currentJob.outputPath ?? outputPath}</p>
               </div>
               <Button
                 variant="outline"
                 size="sm"
                 onClick={() => void revealInExplorer(currentJob.outputPath ?? outputPath)}
-                className="shrink-0 border-green-500/20 hover:border-green-500/40 hover:bg-green-500/5"
+                className="shrink-0 border-success/20 hover:border-success/40 hover:bg-success/5"
               >
                 <Folder className="mr-2 h-4 w-4" /> Open Folder
               </Button>

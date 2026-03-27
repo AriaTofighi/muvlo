@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { SourceWorkspaceCard } from "@/components/workspace/SourceWorkspaceCard";
 import { Progress } from "@/components/ui/progress";
-import { Folder, Type, Play, Save, Square } from "lucide-react";
+import { Folder, Type, Play, Save, Square, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { useSourceFileActions } from "@/hooks/useSourceFileActions";
 import { useJobStore } from "@/stores/jobStore";
@@ -153,6 +153,7 @@ export function Subtitles() {
             toast.error(error instanceof Error ? error.message : "Failed to open the file picker.");
           });
         }}
+        onRemoveSource={() => useWorkspaceStore.getState().clearActiveFile()}
         onDropSource={(files) => void handleDroppedSource(files)}
         title="Source video"
       />
@@ -163,10 +164,17 @@ export function Subtitles() {
         </CardHeader>
         <CardContent>
           {subtitleFile ? (
-            <div className="flex items-center gap-3 rounded-md bg-muted/50 p-4 border">
-              <Type className="h-5 w-5 text-accent" />
-              <span className="font-medium flex-1">{subtitleFile.name}</span>
-              <Button variant="ghost" size="sm" onClick={clearSubtitleFile}>Remove</Button>
+            <div className="flex items-center gap-3 p-4 border rounded-xl bg-muted/20">
+              <div className="flex shrink-0 items-center justify-center p-2 rounded-lg border bg-background">
+                <Type className="h-4 w-4 text-muted-foreground" />
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="font-medium text-foreground truncate">{subtitleFile.name}</p>
+                <p className="text-xs text-muted-foreground/70 font-mono mt-0.5 truncate lowercase">{subtitleFile.path}</p>
+              </div>
+              <Button variant="ghost" size="icon" onClick={clearSubtitleFile} className="h-8 w-8 text-muted-foreground hover:text-destructive hover:bg-destructive/5 transition-colors">
+                <Trash2 className="h-4 w-4" />
+              </Button>
             </div>
           ) : (
             <FileDropZone
@@ -227,18 +235,18 @@ export function Subtitles() {
           </CardContent>
         </Card>
       ) : currentJob?.status === "completed" ? (
-        <Card className="border-green-500/40">
-          <CardContent className="pt-6">
+        <Card className="border-success/40 bg-success/5">
+          <CardContent className="p-4">
             <div className="flex items-center justify-between gap-4">
               <div className="min-w-0">
-                <p className="font-medium text-green-600 dark:text-green-400">Subtitle job completed</p>
+                <p className="font-medium text-success">Subtitle job completed</p>
                 <p className="truncate text-sm text-muted-foreground">{currentJob.outputPath ?? outputPath}</p>
               </div>
               <Button
                 variant="outline"
                 size="sm"
                 onClick={() => void revealInExplorer(currentJob.outputPath ?? outputPath)}
-                className="shrink-0 border-green-500/20 hover:border-green-500/40 hover:bg-green-500/5"
+                className="shrink-0 border-success/20 hover:border-success/40 hover:bg-success/5"
               >
                 <Folder className="mr-2 h-4 w-4" /> Open Folder
               </Button>
