@@ -33,7 +33,7 @@ export function JobQueue() {
             >
               Clear Completed
             </Button>
-            <Button size="sm" onClick={startAllIdle} disabled={!jobs.some((job) => job.status === "idle")}>
+            <Button size="sm" onClick={() => void startAllIdle()} disabled={!jobs.some((job) => job.status === "idle")}>
               <Play className="mr-2 h-4 w-4" /> Start All
             </Button>
           </div>
@@ -52,10 +52,12 @@ export function JobQueue() {
                   <div className="flex flex-col">
                     <span className="font-medium text-sm">{job.fileName}</span>
                     <span className="text-xs text-muted-foreground">{job.workflow}</span>
+                    {job.phase && <span className="text-xs text-muted-foreground/80">{job.phase}</span>}
+                    {job.error && <span className="text-xs text-destructive">{job.error}</span>}
                   </div>
                   <div className="flex items-center gap-2">
                     {job.status === "idle" && (
-                      <Button variant="ghost" size="icon-sm" onClick={() => startJob(job.id)}>
+                      <Button variant="ghost" size="icon-sm" onClick={() => void startJob(job.id)}>
                         <Play className="h-4 w-4" />
                       </Button>
                     )}
@@ -64,7 +66,7 @@ export function JobQueue() {
                       <XCircle className="h-5 w-5 text-destructive" />
                     )}
                     {job.status === "running" && (
-                      <Button variant="ghost" size="icon-sm" onClick={() => cancelJob(job.id)}>
+                      <Button variant="ghost" size="icon-sm" onClick={() => void cancelJob(job.id)}>
                         <XCircle className="h-4 w-4 text-destructive" />
                       </Button>
                     )}

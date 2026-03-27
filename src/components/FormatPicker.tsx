@@ -15,7 +15,7 @@ interface FormatPickerProps {
 }
 
 const FORMATS = {
-  video: ["mp4", "mkv", "webm", "avi", "mov"],
+  video: ["mp4", "mpg4", "mkv", "webm", "avi", "mov"],
   audio: ["mp3", "aac", "wav", "flac", "ogg"],
 };
 

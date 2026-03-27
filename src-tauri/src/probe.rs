@@ -1,15 +1,17 @@
 use serde::{Deserialize, Serialize};
-use std::process::Command;
+use std::path::Path;
+use tokio::process::Command;
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
 pub struct MediaInfo {
     pub format: FormatInfo,
     pub streams: Vec<StreamInfo>,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
 pub struct FormatInfo {
-    pub default_val: Option<String>,
     pub filename: String,
     pub format_name: String,
     pub duration: Option<String>,
@@ -17,7 +19,8 @@ pub struct FormatInfo {
     pub bit_rate: Option<String>,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
 pub struct StreamInfo {
     pub index: usize,
     pub codec_name: Option<String>,
@@ -30,9 +33,12 @@ pub struct StreamInfo {
 
 #[tauri::command]
 pub async fn get_media_info(path: String) -> Result<MediaInfo, String> {
-    // We assume ffprobe is available in the system path for development.
-    // Production will bundle the binary.
-    let output = Command::new("ffprobe")
+    probe_media_info(Path::new(&path)).await
+}
+
+pub async fn probe_media_info(path: &Path) -> Result<MediaInfo, String> {
+    let path_string = path.to_string_lossy().to_string();
+    let output = Command::new(tool_path("MUVLO_FFPROBE_PATH", "ffprobe"))
         .args([
             "-v",
             "quiet",
@@ -40,19 +46,40 @@ pub async fn get_media_info(path: String) -> Result<MediaInfo, String> {
             "json",
             "-show_format",
             "-show_streams",
-            &path,
+            &path_string,
         ])
         .output()
-        .map_err(|e| format!("Failed to execute ffprobe: {}", e))?;
+        .await
+        .map_err(|e| format!("Failed to execute ffprobe: {e}"))?;
 
     if !output.status.success() {
         let err = String::from_utf8_lossy(&output.stderr);
-        return Err(format!("ffprobe error: {}", err));
+        return Err(format!("ffprobe error: {err}"));
     }
 
-    let json_str = String::from_utf8_lossy(&output.stdout);
-    let info: MediaInfo = serde_json::from_str(&json_str)
-        .map_err(|e| format!("Failed to parse ffprobe JSON: {}", e))?;
+    serde_json::from_slice(&output.stdout).map_err(|e| format!("Failed to parse ffprobe JSON: {e}"))
+}
 
-    Ok(info)
+pub async fn probe_duration_seconds(path: &Path) -> Result<Option<f64>, String> {
+    let info = probe_media_info(path).await?;
+    Ok(info
+        .format
+        .duration
+        .as_deref()
+        .and_then(|duration| duration.parse::<f64>().ok()))
+}
+
+#[tauri::command]
+pub async fn get_ffprobe_available() -> Result<bool, String> {
+    let output = Command::new(tool_path("MUVLO_FFPROBE_PATH", "ffprobe"))
+        .arg("-version")
+        .output()
+        .await
+        .map_err(|e| format!("Failed to execute ffprobe: {e}"))?;
+
+    Ok(output.status.success())
+}
+
+fn tool_path(env_name: &str, default: &str) -> String {
+    std::env::var(env_name).unwrap_or_else(|_| default.to_string())
 }

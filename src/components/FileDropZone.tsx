@@ -1,19 +1,26 @@
 import { useState, useCallback, useId } from "react";
 import { UploadCloud } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
 
 interface FileDropZoneProps {
-  onFileSelect: (file: File) => void;
+  onFileSelect?: (file: File) => void;
+  onBrowse?: () => void | Promise<void>;
   accept?: string;
   className?: string;
   label?: string;
+  hint?: string;
+  browseLabel?: string;
 }
 
 export function FileDropZone({
   onFileSelect,
+  onBrowse,
   accept = "video/*,audio/*",
   className,
   label = "Drag & drop a media file here, or click to browse",
+  hint = "Supports most video and audio formats",
+  browseLabel = "Browse Files",
 }: FileDropZoneProps) {
   const [isDragging, setIsDragging] = useState(false);
   const inputId = useId();
@@ -32,7 +39,7 @@ export function FileDropZone({
     (e: React.DragEvent) => {
       e.preventDefault();
       setIsDragging(false);
-      if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+      if (onFileSelect && e.dataTransfer.files && e.dataTransfer.files.length > 0) {
         onFileSelect(e.dataTransfer.files[0]);
       }
     },
@@ -41,12 +48,21 @@ export function FileDropZone({
 
   const handleFileInput = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
-      if (e.target.files && e.target.files.length > 0) {
+      if (onFileSelect && e.target.files && e.target.files.length > 0) {
         onFileSelect(e.target.files[0]);
       }
     },
     [onFileSelect]
   );
+
+  const handleClick = useCallback(() => {
+    if (onBrowse) {
+      void onBrowse();
+      return;
+    }
+
+    document.getElementById(inputId)?.click();
+  }, [inputId, onBrowse]);
 
   return (
     <div
@@ -58,7 +74,7 @@ export function FileDropZone({
       onDragOver={handleDragOver}
       onDragLeave={handleDragLeave}
       onDrop={handleDrop}
-      onClick={() => document.getElementById(inputId)?.click()}
+      onClick={handleClick}
     >
       <input
         id={inputId}
@@ -75,7 +91,10 @@ export function FileDropZone({
           )}
         />
         <p className="font-medium text-foreground">{label}</p>
-        <p className="text-sm">Supports most video and audio formats</p>
+        <p className="text-sm">{hint}</p>
+        <Button type="button" variant="secondary" className="pointer-events-none">
+          {browseLabel}
+        </Button>
       </div>
     </div>
   );

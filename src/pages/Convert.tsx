@@ -1,51 +1,104 @@
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
 import { FormatPicker } from "@/components/FormatPicker";
-import { Play, Square } from "lucide-react";
+import { Play, Save, Square } from "lucide-react";
 import { toast } from "sonner";
 import { useJobStore } from "@/stores/jobStore";
 import { useWorkspaceStore } from "@/stores/workspaceStore";
+import { pickOutputPath } from "@/lib/media-client";
+import { buildSuggestedOutputName, formatDuration, formatFileSize, getMediaDurationSeconds } from "@/lib/media-helpers";
+import type { MediaJobRequest } from "@/lib/media-types";
 
 export function Convert() {
   const activeFile = useWorkspaceStore((state) => state.activeFile);
-  const { jobs, addJob, startJob, cancelJob } = useJobStore();
+  const { jobs, enqueueJob, startJob, cancelJob } = useJobStore();
   const [format, setFormat] = useState("mp4");
+  const [outputPath, setOutputPath] = useState("");
 
-  const currentJob = [...jobs]
-    .reverse()
-    .find((job) => job.workflow === "Convert" && job.fileName === activeFile?.name);
+  const suggestedOutputName = activeFile
+    ? buildSuggestedOutputName(activeFile, format, "-converted")
+    : null;
 
-  const startConversion = () => {
+  useEffect(() => {
+    setOutputPath("");
+  }, [activeFile?.path, format]);
+
+  const currentJob = useMemo(
+    () =>
+      [...jobs]
+        .reverse()
+        .find(
+          (job) =>
+            job.workflow === "Convert" &&
+            "inputPath" in job.request.payload &&
+            job.request.payload.inputPath === activeFile?.path,
+        ),
+    [activeFile?.path, jobs],
+  );
+
+  const handleChooseOutput = async () => {
     if (!activeFile) {
-      toast.error("Please select a file first from the Dashboard.");
+      toast.error("Select a source file first.");
       return;
     }
 
-    const jobId = addJob({
-      fileName: activeFile.name,
-      workflow: "Convert",
+    const nextPath = await pickOutputPath({
+      suggestedName: suggestedOutputName,
     });
 
-    startJob(jobId);
-    toast.success(`Queued ${activeFile.name} for conversion to .${format}`);
+    if (nextPath) {
+      setOutputPath(nextPath);
+    }
   };
 
-  const cancelConversion = () => {
+  const startConversion = async () => {
+    if (!activeFile || !outputPath) {
+      toast.error("Select a source file and output path first.");
+      return;
+    }
+
+    const request: MediaJobRequest = {
+      jobId: crypto.randomUUID(),
+      payload: {
+        kind: "convert",
+        inputPath: activeFile.path,
+        outputPath,
+        format,
+        overwrite: true,
+      },
+    };
+
+    enqueueJob({
+      id: request.jobId,
+      fileName: activeFile.name,
+      workflow: "Convert",
+      request,
+    });
+
+    await startJob(request.jobId);
+    toast.success(`Started conversion to .${format}`);
+  };
+
+  const cancelConversion = async () => {
     if (!currentJob) {
       return;
     }
 
-    cancelJob(currentJob.id);
+    await cancelJob(currentJob.id);
     toast("Conversion cancelled");
   };
+
+  const duration = formatDuration(getMediaDurationSeconds(activeFile?.mediaInfo));
+  const videoStream = activeFile?.mediaInfo?.streams.find((stream) => stream.codec_type === "video");
 
   return (
     <div className="mx-auto max-w-3xl space-y-6 animate-in fade-in duration-500">
       <div>
         <h2 className="text-3xl font-bold tracking-tight">Convert Media</h2>
-        <p className="text-muted-foreground">Transcode your video or audio into a different format.</p>
+        <p className="text-muted-foreground">Transcode your source into a different container format.</p>
       </div>
 
       <Card>
@@ -55,18 +108,37 @@ export function Convert() {
             {activeFile ? activeFile.name : "No file selected. Go to Dashboard to select a file."}
           </CardDescription>
         </CardHeader>
+        {activeFile && (
+          <CardContent className="grid gap-2 text-sm text-muted-foreground sm:grid-cols-3">
+            <span>Size: {formatFileSize(activeFile.size)}</span>
+            <span>Duration: {duration}</span>
+            <span>
+              Resolution: {videoStream?.width && videoStream?.height ? `${videoStream.width}x${videoStream.height}` : "Audio only"}
+            </span>
+          </CardContent>
+        )}
       </Card>
 
       <Card>
         <CardHeader>
           <CardTitle>Target Settings</CardTitle>
+          <CardDescription>Choose the container and save destination.</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid gap-2">
             <span className="text-sm font-medium">Output Format</span>
             <FormatPicker value={format} onChange={setFormat} />
           </div>
-          {/* We will add Codec pickers here later depending on the selected format */}
+
+          <div className="grid gap-2">
+            <span className="text-sm font-medium">Output Path</span>
+            <div className="flex flex-col gap-3 sm:flex-row">
+              <Input value={outputPath} onChange={(event) => setOutputPath(event.target.value)} placeholder="Choose where to save the converted file" />
+              <Button variant="secondary" onClick={() => void handleChooseOutput()} disabled={!activeFile}>
+                <Save className="mr-2 h-4 w-4" /> Choose
+              </Button>
+            </div>
+          </div>
         </CardContent>
       </Card>
 
@@ -74,12 +146,12 @@ export function Convert() {
         <Card className="border-accent">
           <CardContent className="pt-6 space-y-4">
             <div className="flex justify-between text-sm">
-              <span>Converting to {format}...</span>
-              <span className="font-mono">{currentJob.progress}%</span>
+              <span>{currentJob.phase ?? "Converting"}...</span>
+              <span className="font-mono">{Math.round(currentJob.progress)}%</span>
             </div>
             <Progress value={currentJob.progress} className="h-2" />
             <div className="flex justify-end">
-              <Button variant="destructive" onClick={cancelConversion}>
+              <Button variant="destructive" onClick={() => void cancelConversion()}>
                 <Square className="mr-2 h-4 w-4" /> Cancel
               </Button>
             </div>
@@ -87,21 +159,18 @@ export function Convert() {
         </Card>
       ) : currentJob?.status === "completed" ? (
         <Card className="border-green-500/40">
-          <CardContent className="flex items-center justify-between gap-4 pt-6">
-            <div>
-              <p className="font-medium">Last conversion completed</p>
-              <p className="text-sm text-muted-foreground">{activeFile?.name} is ready for export.</p>
-            </div>
-            <span className="font-mono text-sm text-green-500">100%</span>
+          <CardContent className="space-y-2 pt-6">
+            <p className="font-medium">Conversion completed</p>
+            <p className="text-sm text-muted-foreground">{currentJob.outputPath ?? outputPath}</p>
           </CardContent>
         </Card>
-      ) : (
-        <div className="flex justify-end">
-          <Button onClick={startConversion} size="lg" disabled={!activeFile}>
-            <Play className="mr-2 h-4 w-4" /> Start Conversion
-          </Button>
-        </div>
-      )}
+      ) : null}
+
+      <div className="flex justify-end">
+        <Button onClick={() => void startConversion()} size="lg" disabled={!activeFile || !outputPath}>
+          <Play className="mr-2 h-4 w-4" /> Start Conversion
+        </Button>
+      </div>
     </div>
   );
 }

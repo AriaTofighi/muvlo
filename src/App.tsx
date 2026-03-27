@@ -7,8 +7,11 @@ import { Compress } from "./pages/Compress";
 import { Merge } from "./pages/Merge";
 import { ExtractAudio } from "./pages/ExtractAudio";
 import { Subtitles } from "./pages/Subtitles";
+import { useJobEvents } from "./hooks/useJobEvents";
 
 function App() {
+  useJobEvents();
+
   return (
     <BrowserRouter>
       <Routes>

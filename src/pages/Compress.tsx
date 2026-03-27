@@ -1,43 +1,94 @@
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 import { Slider } from "@/components/ui/slider";
 import { Progress } from "@/components/ui/progress";
-import { Minimize, Square } from "lucide-react";
+import { Minimize, Save, Square } from "lucide-react";
 import { toast } from "sonner";
 import { useJobStore } from "@/stores/jobStore";
 import { useWorkspaceStore } from "@/stores/workspaceStore";
+import { pickOutputPath } from "@/lib/media-client";
+import { buildSuggestedOutputName } from "@/lib/media-helpers";
+import type { MediaJobRequest } from "@/lib/media-types";
+
+const qualityToCrf = (quality: number) => {
+  const normalized = Math.max(0, Math.min(100, quality));
+  return Math.round(35 - (normalized / 100) * 17);
+};
 
 export function Compress() {
   const activeFile = useWorkspaceStore((state) => state.activeFile);
-  const { jobs, addJob, startJob, cancelJob } = useJobStore();
-  const [quality, setQuality] = useState([70]); // 0-100 scale for simplicity
+  const { jobs, enqueueJob, startJob, cancelJob } = useJobStore();
+  const [quality, setQuality] = useState([70]);
+  const [outputPath, setOutputPath] = useState("");
 
-  const currentJob = [...jobs]
-    .reverse()
-    .find((job) => job.workflow === "Compress" && job.fileName === activeFile?.name);
+  useEffect(() => {
+    setOutputPath("");
+  }, [activeFile?.path]);
 
-  const startCompression = () => {
-    if (!activeFile) {
-      toast.error("Please select a file first from the Dashboard.");
+  const currentJob = useMemo(
+    () =>
+      [...jobs]
+        .reverse()
+        .find(
+          (job) =>
+            job.workflow === "Compress" &&
+            "inputPath" in job.request.payload &&
+            job.request.payload.inputPath === activeFile?.path,
+        ),
+    [activeFile?.path, jobs],
+  );
+
+  const startCompression = async () => {
+    if (!activeFile || !outputPath) {
+      toast.error("Please select a file and output path first.");
       return;
     }
 
-    const jobId = addJob({
+    const request: MediaJobRequest = {
+      jobId: crypto.randomUUID(),
+      payload: {
+        kind: "compress",
+        inputPath: activeFile.path,
+        outputPath,
+        quality: quality[0],
+        overwrite: true,
+      },
+    };
+
+    enqueueJob({
+      id: request.jobId,
       fileName: activeFile.name,
       workflow: "Compress",
+      request,
     });
 
-    startJob(jobId);
-    toast.success(`Queued ${activeFile.name} for compression at ${quality[0]}% quality`);
+    await startJob(request.jobId);
+    toast.success(`Started compression at quality ${quality[0]}%`);
   };
 
-  const cancelCompression = () => {
+  const chooseOutput = async () => {
+    if (!activeFile) {
+      toast.error("Select a file first.");
+      return;
+    }
+
+    const nextPath = await pickOutputPath({
+      suggestedName: buildSuggestedOutputName(activeFile, activeFile.extension ?? "mp4", "-compressed"),
+    });
+
+    if (nextPath) {
+      setOutputPath(nextPath);
+    }
+  };
+
+  const cancelCompression = async () => {
     if (!currentJob) {
       return;
     }
 
-    cancelJob(currentJob.id);
+    await cancelJob(currentJob.id);
     toast("Compression cancelled");
   };
 
@@ -60,19 +111,31 @@ export function Compress() {
       <Card>
         <CardHeader>
           <CardTitle>Compression Level</CardTitle>
-          <CardDescription>Balance between visual quality and final file size.</CardDescription>
+          <CardDescription>Higher quality uses a lower CRF and a larger output file.</CardDescription>
         </CardHeader>
         <CardContent className="space-y-6 pt-2">
-          <Slider 
-            value={quality} 
-            max={100} 
-            step={1} 
-            onValueChange={(val) => setQuality(val as number[])} 
+          <Slider
+            value={quality}
+            max={100}
+            step={1}
+            onValueChange={(value) => setQuality(value as number[])}
           />
           <div className="flex justify-between text-sm text-muted-foreground">
-            <span>Smallest Size (0%)</span>
-            <span className="font-mono font-medium text-foreground">{quality[0]}% Quality</span>
-            <span>Best Quality (100%)</span>
+            <span>Smaller File</span>
+            <span className="font-mono font-medium text-foreground">
+              {quality[0]}% Quality / CRF {qualityToCrf(quality[0])}
+            </span>
+            <span>Higher Quality</span>
+          </div>
+
+          <div className="grid gap-2">
+            <span className="text-sm font-medium">Output Path</span>
+            <div className="flex flex-col gap-3 sm:flex-row">
+              <Input value={outputPath} onChange={(event) => setOutputPath(event.target.value)} placeholder="Choose where to save the compressed file" />
+              <Button variant="secondary" onClick={() => void chooseOutput()} disabled={!activeFile}>
+                <Save className="mr-2 h-4 w-4" /> Choose
+              </Button>
+            </div>
           </div>
         </CardContent>
       </Card>
@@ -81,12 +144,12 @@ export function Compress() {
         <Card className="border-accent">
           <CardContent className="pt-6 space-y-4">
             <div className="flex justify-between text-sm">
-              <span>Compressing...</span>
-              <span className="font-mono">{currentJob.progress}%</span>
+              <span>{currentJob.phase ?? "Compressing"}...</span>
+              <span className="font-mono">{Math.round(currentJob.progress)}%</span>
             </div>
             <Progress value={currentJob.progress} className="h-2" />
             <div className="flex justify-end">
-              <Button variant="destructive" onClick={cancelCompression}>
+              <Button variant="destructive" onClick={() => void cancelCompression()}>
                 <Square className="mr-2 h-4 w-4" /> Cancel
               </Button>
             </div>
@@ -94,21 +157,18 @@ export function Compress() {
         </Card>
       ) : currentJob?.status === "completed" ? (
         <Card className="border-green-500/40">
-          <CardContent className="flex items-center justify-between gap-4 pt-6">
-            <div>
-              <p className="font-medium">Last compression completed</p>
-              <p className="text-sm text-muted-foreground">Track finished jobs in the queue drawer.</p>
-            </div>
-            <span className="font-mono text-sm text-green-500">100%</span>
+          <CardContent className="space-y-2 pt-6">
+            <p className="font-medium">Compression completed</p>
+            <p className="text-sm text-muted-foreground">{currentJob.outputPath ?? outputPath}</p>
           </CardContent>
         </Card>
-      ) : (
-        <div className="flex justify-end">
-          <Button onClick={startCompression} size="lg" disabled={!activeFile}>
-            <Minimize className="mr-2 h-4 w-4" /> Start Compression
-          </Button>
-        </div>
-      )}
+      ) : null}
+
+      <div className="flex justify-end">
+        <Button onClick={() => void startCompression()} size="lg" disabled={!activeFile || !outputPath}>
+          <Minimize className="mr-2 h-4 w-4" /> Start Compression
+        </Button>
+      </div>
     </div>
   );
 }
