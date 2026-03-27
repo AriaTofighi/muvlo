@@ -2,6 +2,7 @@ import { Link, useLocation } from "react-router-dom";
 import {
   Sidebar as ShadcnSidebar,
   SidebarContent,
+  SidebarFooter,
   SidebarGroup,
   SidebarGroupContent,
   SidebarGroupLabel,
@@ -10,8 +11,14 @@ import {
   SidebarMenuItem,
   SidebarHeader,
 } from "@/components/ui/sidebar";
-import { LayoutDashboard, FileVideo, Scissors, Minimize, Combine, Music, Type } from "lucide-react";
+import { LayoutDashboard, FileVideo, Scissors, Minimize, Combine, Music, Type, FolderOpen } from "lucide-react";
 import { MuvloMark } from "@/components/brand/MuvloMark";
+import { Button } from "@/components/ui/button";
+import { JobQueue } from "@/components/JobQueue";
+import { SettingsPanel } from "@/components/SettingsPanel";
+import { useSourceFileActions } from "@/hooks/useSourceFileActions";
+import { useWorkspaceStore } from "@/stores/workspaceStore";
+import { toast } from "sonner";
 
 const NAV_ITEMS = [
   { path: "/", label: "Dashboard", icon: LayoutDashboard },
@@ -25,6 +32,8 @@ const NAV_ITEMS = [
 
 export function Sidebar() {
   const location = useLocation();
+  const activeFile = useWorkspaceStore((state) => state.activeFile);
+  const { openSourceFile } = useSourceFileActions();
 
   return (
     <ShadcnSidebar variant="inset">
@@ -61,6 +70,31 @@ export function Sidebar() {
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
+      <SidebarFooter className="border-t border-sidebar-border/70 p-3 space-y-3">
+        {activeFile && (
+          <div className="min-w-0 rounded-lg bg-sidebar-accent/40 px-3 py-2">
+            <p className="truncate text-xs font-medium text-sidebar-foreground">{activeFile.name}</p>
+            <p className="text-[11px] text-sidebar-foreground/50">Active source</p>
+          </div>
+        )}
+        <div className="flex items-center gap-2">
+          <Button
+            type="button"
+            variant="secondary"
+            className="flex-1 justify-start gap-2 text-sm"
+            onClick={() => {
+              void openSourceFile().catch((error) => {
+                toast.error(error instanceof Error ? error.message : "Failed to open the file picker.");
+              });
+            }}
+          >
+            <FolderOpen className="h-4 w-4 shrink-0" />
+            Open Source
+          </Button>
+          <JobQueue />
+          <SettingsPanel />
+        </div>
+      </SidebarFooter>
     </ShadcnSidebar>
   );
 }
