@@ -1,16 +1,24 @@
-import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { FileDropZone } from "@/components/FileDropZone";
 import { Link, useNavigate } from "react-router-dom";
 import { FileVideo, Scissors, Minimize, Combine, Music, Type } from "lucide-react";
+import { useWorkspaceStore } from "@/stores/workspaceStore";
+
+const formatFileSize = (size: number) => {
+  if (size < 1024 * 1024) {
+    return `${Math.max(1, Math.round(size / 1024))} KB`;
+  }
+
+  return `${(size / (1024 * 1024)).toFixed(1)} MB`;
+};
 
 export function Home() {
   const navigate = useNavigate();
+  const { recentFiles, setActiveFile } = useWorkspaceStore();
 
   const handleFile = (file: File) => {
-    // In a real app we might put this file in global state, then navigate
-    console.log("File selected:", file.name);
-    // For now, redirect to convert as a default workflow
-    navigate("/convert", { state: { file } });
+    setActiveFile(file);
+    navigate("/convert");
   };
 
   const WORKFLOWS = [
@@ -30,6 +38,31 @@ export function Home() {
       </div>
 
       <FileDropZone onFileSelect={handleFile} />
+
+      {recentFiles.length > 0 && (
+        <Card className="border-border/60">
+          <CardHeader>
+            <CardTitle>Recent Imports</CardTitle>
+            <CardDescription>Jump back into files added during this session.</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-2">
+            {recentFiles.map((file) => (
+              <button
+                key={file.id}
+                className="flex w-full items-center justify-between rounded-lg border border-border/60 bg-card/70 px-4 py-3 text-left transition hover:border-accent hover:bg-accent/5"
+                onClick={() => {
+                  setActiveFile(file.file);
+                  navigate("/convert");
+                }}
+                type="button"
+              >
+                <span className="min-w-0 flex-1 truncate font-medium">{file.name}</span>
+                <span className="ml-4 shrink-0 text-sm text-muted-foreground">{formatFileSize(file.size)}</span>
+              </button>
+            ))}
+          </CardContent>
+        </Card>
+      )}
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 mt-8">
         {WORKFLOWS.map((wf) => (

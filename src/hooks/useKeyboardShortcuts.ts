@@ -19,7 +19,7 @@ export function useKeyboardShortcuts() {
       }
 
       // Alt + Number: Quick Navigation
-      if (e.altKey && e.key >= "1" && e.key <= "6") {
+      if (e.altKey && e.key >= "1" && e.key <= "7") {
         e.preventDefault();
         const routes = ["/", "/convert", "/trim", "/compress", "/merge", "/extract-audio", "/subtitles"];
         const index = parseInt(e.key) - 1;

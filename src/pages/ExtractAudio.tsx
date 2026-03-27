@@ -1,15 +1,31 @@
 import { useState } from "react";
-import { useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { FormatPicker } from "@/components/FormatPicker";
 import { Play } from "lucide-react";
+import { toast } from "sonner";
+import { useJobStore } from "@/stores/jobStore";
+import { useWorkspaceStore } from "@/stores/workspaceStore";
 
 export function ExtractAudio() {
-  const location = useLocation();
-  const initialFile = location.state?.file as File | undefined;
-  
+  const activeFile = useWorkspaceStore((state) => state.activeFile);
+  const { addJob, startJob } = useJobStore();
   const [format, setFormat] = useState("mp3");
+
+  const startExtraction = () => {
+    if (!activeFile) {
+      toast.error("Please select a file first from the Dashboard.");
+      return;
+    }
+
+    const jobId = addJob({
+      fileName: activeFile.name,
+      workflow: "Extract Audio",
+    });
+
+    startJob(jobId);
+    toast.success(`Queued audio extraction to .${format}`);
+  };
 
   return (
     <div className="mx-auto max-w-3xl space-y-6 animate-in fade-in duration-500">
@@ -22,7 +38,7 @@ export function ExtractAudio() {
         <CardHeader>
           <CardTitle>Source Media</CardTitle>
           <CardDescription>
-            {initialFile ? initialFile.name : "Select a file from the Dashboard"}
+            {activeFile ? activeFile.name : "Select a file from the Dashboard"}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -54,7 +70,7 @@ export function ExtractAudio() {
       </Card>
 
       <div className="flex justify-end">
-        <Button size="lg" disabled={!initialFile}>
+        <Button size="lg" disabled={!activeFile} onClick={startExtraction}>
           <Play className="mr-2 h-4 w-4" /> Extract to .{format}
         </Button>
       </div>

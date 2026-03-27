@@ -1,46 +1,43 @@
 import { useState } from "react";
-import { useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Slider } from "@/components/ui/slider";
 import { Progress } from "@/components/ui/progress";
 import { Minimize, Square } from "lucide-react";
 import { toast } from "sonner";
+import { useJobStore } from "@/stores/jobStore";
+import { useWorkspaceStore } from "@/stores/workspaceStore";
 
 export function Compress() {
-  const location = useLocation();
-  const initialFile = location.state?.file as File | undefined;
-  
+  const activeFile = useWorkspaceStore((state) => state.activeFile);
+  const { jobs, addJob, startJob, cancelJob } = useJobStore();
   const [quality, setQuality] = useState([70]); // 0-100 scale for simplicity
-  const [isCompressing, setIsCompressing] = useState(false);
-  const [progress, setProgress] = useState(0);
+
+  const currentJob = [...jobs]
+    .reverse()
+    .find((job) => job.workflow === "Compress" && job.fileName === activeFile?.name);
 
   const startCompression = () => {
-    if (!initialFile) {
+    if (!activeFile) {
       toast.error("Please select a file first from the Dashboard.");
       return;
     }
-    setIsCompressing(true);
-    setProgress(0);
-    toast.success(`Starting compression at ${quality[0]}% quality`);
-    
-    // Mock progress
-    const interval = setInterval(() => {
-      setProgress((prev) => {
-        if (prev >= 100) {
-          clearInterval(interval);
-          setIsCompressing(false);
-          toast.success("Compression completed!");
-          return 100;
-        }
-        return prev + 10;
-      });
-    }, 400);
+
+    const jobId = addJob({
+      fileName: activeFile.name,
+      workflow: "Compress",
+    });
+
+    startJob(jobId);
+    toast.success(`Queued ${activeFile.name} for compression at ${quality[0]}% quality`);
   };
 
   const cancelCompression = () => {
-    setIsCompressing(false);
-    setProgress(0);
+    if (!currentJob) {
+      return;
+    }
+
+    cancelJob(currentJob.id);
     toast("Compression cancelled");
   };
 
@@ -55,7 +52,7 @@ export function Compress() {
         <CardHeader>
           <CardTitle>Source File</CardTitle>
           <CardDescription>
-            {initialFile ? initialFile.name : "Select a file from the Dashboard"}
+            {activeFile ? activeFile.name : "Select a file from the Dashboard"}
           </CardDescription>
         </CardHeader>
       </Card>
@@ -80,14 +77,14 @@ export function Compress() {
         </CardContent>
       </Card>
 
-      {isCompressing ? (
+      {currentJob?.status === "running" ? (
         <Card className="border-accent">
           <CardContent className="pt-6 space-y-4">
             <div className="flex justify-between text-sm">
               <span>Compressing...</span>
-              <span className="font-mono">{progress}%</span>
+              <span className="font-mono">{currentJob.progress}%</span>
             </div>
-            <Progress value={progress} className="h-2" />
+            <Progress value={currentJob.progress} className="h-2" />
             <div className="flex justify-end">
               <Button variant="destructive" onClick={cancelCompression}>
                 <Square className="mr-2 h-4 w-4" /> Cancel
@@ -95,9 +92,19 @@ export function Compress() {
             </div>
           </CardContent>
         </Card>
+      ) : currentJob?.status === "completed" ? (
+        <Card className="border-green-500/40">
+          <CardContent className="flex items-center justify-between gap-4 pt-6">
+            <div>
+              <p className="font-medium">Last compression completed</p>
+              <p className="text-sm text-muted-foreground">Track finished jobs in the queue drawer.</p>
+            </div>
+            <span className="font-mono text-sm text-green-500">100%</span>
+          </CardContent>
+        </Card>
       ) : (
         <div className="flex justify-end">
-          <Button onClick={startCompression} size="lg" disabled={!initialFile}>
+          <Button onClick={startCompression} size="lg" disabled={!activeFile}>
             <Minimize className="mr-2 h-4 w-4" /> Start Compression
           </Button>
         </div>

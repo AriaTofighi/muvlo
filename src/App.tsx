@@ -2,12 +2,11 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { Layout } from "./components/Layout/Layout";
 import { Home } from "./pages/Home";
 import { Convert } from "./pages/Convert";
-// Placholders
-const Trim = () => <div className="p-4">Trim Placeholder</div>;
-const Compress = () => <div className="p-4">Compress Placeholder</div>;
-const Merge = () => <div className="p-4">Merge Placeholder</div>;
-const ExtractAudio = () => <div className="p-4">Extract Audio Placeholder</div>;
-const Subtitles = () => <div className="p-4">Subtitles Placeholder</div>;
+import { Trim } from "./pages/Trim";
+import { Compress } from "./pages/Compress";
+import { Merge } from "./pages/Merge";
+import { ExtractAudio } from "./pages/ExtractAudio";
+import { Subtitles } from "./pages/Subtitles";
 
 function App() {
   return (

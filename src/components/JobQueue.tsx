@@ -6,20 +6,7 @@ import { cn } from "@/lib/utils";
 import { ListVideo, Play, Trash2, XCircle, CheckCircle2 } from "lucide-react";
 
 export function JobQueue() {
-  const { jobs, removeJob, clearCompleted, setJobStatus, updateJobProgress } = useJobStore();
-
-  const handleStartMockJob = (id: string) => {
-    setJobStatus(id, "running");
-    let progress = 0;
-    const interval = setInterval(() => {
-      progress += 10;
-      updateJobProgress(id, progress);
-      if (progress >= 100) {
-        clearInterval(interval);
-        setJobStatus(id, "completed");
-      }
-    }, 300);
-  };
+  const { jobs, removeJob, clearCompleted, startJob, startAllIdle, cancelJob } = useJobStore();
 
   return (
     <Sheet>
@@ -38,10 +25,15 @@ export function JobQueue() {
             <SheetDescription>Manage background conversion and processing tasks.</SheetDescription>
           </div>
           <div className="flex gap-2">
-            <Button variant="outline" size="sm" onClick={clearCompleted} disabled={!jobs.some(j => j.status === 'completed')}>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={clearCompleted}
+              disabled={!jobs.some((job) => ["completed", "cancelled"].includes(job.status))}
+            >
               Clear Completed
             </Button>
-            <Button size="sm">
+            <Button size="sm" onClick={startAllIdle} disabled={!jobs.some((job) => job.status === "idle")}>
               <Play className="mr-2 h-4 w-4" /> Start All
             </Button>
           </div>
@@ -63,12 +55,19 @@ export function JobQueue() {
                   </div>
                   <div className="flex items-center gap-2">
                     {job.status === "idle" && (
-                      <Button variant="ghost" size="icon-sm" onClick={() => handleStartMockJob(job.id)}>
+                      <Button variant="ghost" size="icon-sm" onClick={() => startJob(job.id)}>
                         <Play className="h-4 w-4" />
                       </Button>
                     )}
                     {job.status === "completed" && <CheckCircle2 className="h-5 w-5 text-green-500" />}
-                    {job.status === "failed" && <XCircle className="h-5 w-5 text-destructive" />}
+                    {["failed", "cancelled"].includes(job.status) && (
+                      <XCircle className="h-5 w-5 text-destructive" />
+                    )}
+                    {job.status === "running" && (
+                      <Button variant="ghost" size="icon-sm" onClick={() => cancelJob(job.id)}>
+                        <XCircle className="h-4 w-4 text-destructive" />
+                      </Button>
+                    )}
                     
                     <Button variant="ghost" size="icon-sm" onClick={() => removeJob(job.id)}>
                       <Trash2 className="h-4 w-4 text-destructive" />

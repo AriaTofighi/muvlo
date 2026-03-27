@@ -1,15 +1,31 @@
 import { useState } from "react";
-import { useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Slider } from "@/components/ui/slider";
 import { Scissors } from "lucide-react";
+import { toast } from "sonner";
+import { useJobStore } from "@/stores/jobStore";
+import { useWorkspaceStore } from "@/stores/workspaceStore";
 
 export function Trim() {
-  const location = useLocation();
-  const initialFile = location.state?.file as File | undefined;
-  
+  const activeFile = useWorkspaceStore((state) => state.activeFile);
+  const { addJob, startJob } = useJobStore();
   const [range, setRange] = useState([0, 100]); // percentage from 0 to 100
+
+  const startTrim = () => {
+    if (!activeFile) {
+      toast.error("Please select a file first from the Dashboard.");
+      return;
+    }
+
+    const jobId = addJob({
+      fileName: activeFile.name,
+      workflow: "Trim",
+    });
+
+    startJob(jobId);
+    toast.success(`Queued trim from ${range[0]}% to ${range[1]}%`);
+  };
 
   return (
     <div className="mx-auto max-w-3xl space-y-6 animate-in fade-in duration-500">
@@ -22,7 +38,7 @@ export function Trim() {
         <CardHeader>
           <CardTitle>Source Media</CardTitle>
           <CardDescription>
-            {initialFile ? initialFile.name : "Select a file from the Dashboard"}
+            {activeFile ? activeFile.name : "Select a file from the Dashboard"}
           </CardDescription>
         </CardHeader>
       </Card>
@@ -59,7 +75,7 @@ export function Trim() {
       </Card>
 
       <div className="flex justify-end">
-        <Button size="lg" disabled={!initialFile}>
+        <Button size="lg" disabled={!activeFile} onClick={startTrim}>
           <Scissors className="mr-2 h-4 w-4" /> Trim & Save
         </Button>
       </div>

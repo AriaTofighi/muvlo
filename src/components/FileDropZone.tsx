@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useId } from "react";
 import { UploadCloud } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -16,6 +16,7 @@ export function FileDropZone({
   label = "Drag & drop a media file here, or click to browse",
 }: FileDropZoneProps) {
   const [isDragging, setIsDragging] = useState(false);
+  const inputId = useId();
 
   const handleDragOver = useCallback((e: React.DragEvent) => {
     e.preventDefault();
@@ -57,10 +58,10 @@ export function FileDropZone({
       onDragOver={handleDragOver}
       onDragLeave={handleDragLeave}
       onDrop={handleDrop}
-      onClick={() => document.getElementById("fileDropzoneInput")?.click()}
+      onClick={() => document.getElementById(inputId)?.click()}
     >
       <input
-        id="fileDropzoneInput"
+        id={inputId}
         type="file"
         accept={accept}
         className="hidden"

@@ -1,22 +1,39 @@
 import { useState } from "react";
-import { useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { FileDropZone } from "@/components/FileDropZone";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Type, Play } from "lucide-react";
 import { toast } from "sonner";
+import { useJobStore } from "@/stores/jobStore";
+import { useWorkspaceStore } from "@/stores/workspaceStore";
 
 export function Subtitles() {
-  const location = useLocation();
-  const initialFile = location.state?.file as File | undefined;
-  
-  const [subFile, setSubFile] = useState<File | null>(null);
+  const activeFile = useWorkspaceStore((state) => state.activeFile);
+  const subtitleFile = useWorkspaceStore((state) => state.subtitleFile);
+  const setSubtitleFile = useWorkspaceStore((state) => state.setSubtitleFile);
+  const clearSubtitleFile = useWorkspaceStore((state) => state.clearSubtitleFile);
+  const { addJob, startJob } = useJobStore();
   const [mode, setMode] = useState("soft");
 
   const handleSubFile = (file: File) => {
-    setSubFile(file);
+    setSubtitleFile(file);
     toast.success(`Subtitle loaded: ${file.name}`);
+  };
+
+  const startSubtitleJob = () => {
+    if (!activeFile || !subtitleFile) {
+      toast.error("Select both a source video and a subtitle file first.");
+      return;
+    }
+
+    const jobId = addJob({
+      fileName: activeFile.name,
+      workflow: "Subtitles",
+    });
+
+    startJob(jobId);
+    toast.success(`Queued ${mode === "soft" ? "soft subtitle muxing" : "burn-in subtitles"}`);
   };
 
   return (
@@ -30,7 +47,7 @@ export function Subtitles() {
         <CardHeader>
           <CardTitle>Source Video</CardTitle>
           <CardDescription>
-            {initialFile ? initialFile.name : "Select a file from the Dashboard"}
+            {activeFile ? activeFile.name : "Select a file from the Dashboard"}
           </CardDescription>
         </CardHeader>
       </Card>
@@ -41,11 +58,11 @@ export function Subtitles() {
           <CardDescription>Requires .srt or .vtt formats.</CardDescription>
         </CardHeader>
         <CardContent>
-          {subFile ? (
+          {subtitleFile ? (
             <div className="flex items-center gap-3 rounded-md bg-muted/50 p-4 border">
               <Type className="h-5 w-5 text-accent" />
-              <span className="font-medium flex-1">{subFile.name}</span>
-              <Button variant="ghost" size="sm" onClick={() => setSubFile(null)}>Remove</Button>
+              <span className="font-medium flex-1">{subtitleFile.name}</span>
+              <Button variant="ghost" size="sm" onClick={clearSubtitleFile}>Remove</Button>
             </div>
           ) : (
             <FileDropZone 
@@ -76,7 +93,7 @@ export function Subtitles() {
       </Card>
 
       <div className="flex justify-end">
-        <Button size="lg" disabled={!initialFile || !subFile}>
+        <Button size="lg" disabled={!activeFile || !subtitleFile} onClick={startSubtitleJob}>
           <Play className="mr-2 h-4 w-4" /> Apply Subtitles
         </Button>
       </div>
