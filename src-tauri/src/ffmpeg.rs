@@ -260,6 +260,32 @@ pub async fn pick_input_files(
 }
 
 #[tauri::command]
+pub async fn resolve_dropped_paths(paths: Vec<String>) -> Result<Vec<SelectedFile>, String> {
+    tauri::async_runtime::spawn_blocking(move || {
+        Ok::<Vec<SelectedFile>, String>(
+            paths
+                .into_iter()
+                .map(PathBuf::from)
+                .filter(|path| path.is_file())
+                .map(|path| {
+                    file_metadata(&path).unwrap_or_else(|_| SelectedFile {
+                        path: path.to_string_lossy().to_string(),
+                        name: path
+                            .file_name()
+                            .and_then(|name| name.to_str())
+                            .unwrap_or_default()
+                            .to_string(),
+                        size_bytes: 0,
+                    })
+                })
+                .collect(),
+        )
+    })
+    .await
+    .map_err(|e| format!("Failed to resolve dropped files: {e}"))?
+}
+
+#[tauri::command]
 pub async fn pick_output_path(suggested_name: Option<String>) -> Result<Option<String>, String> {
     tauri::async_runtime::spawn_blocking(move || {
         let mut dialog = FileDialog::new();

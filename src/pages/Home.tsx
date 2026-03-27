@@ -7,7 +7,7 @@ import { useSourceFileActions } from "@/hooks/useSourceFileActions";
 import { useWorkspaceStore } from "@/stores/workspaceStore";
 import { getMediaToolStatus, hasTauriRuntime } from "@/lib/media-client";
 import { formatFileSize } from "@/lib/media-helpers";
-import type { MediaToolStatus } from "@/lib/media-types";
+import type { MediaToolStatus, SelectedFile } from "@/lib/media-types";
 import { toast } from "sonner";
 
 export function Home() {
@@ -31,6 +31,17 @@ export function Home() {
 
   const handleBrowse = async () => {
     await openSourceFile({ navigateTo: "/convert" });
+  };
+
+  const handleDroppedSource = async (files: SelectedFile[]) => {
+    const sourceFile = files.find((file) => file.kind === "video" || file.kind === "audio");
+    if (!sourceFile) {
+      toast.error("Drop a video or audio file.");
+      return;
+    }
+
+    await selectActiveFile(sourceFile);
+    navigate("/convert");
   };
 
   const workflows = [
@@ -71,7 +82,8 @@ export function Home() {
                 toast.error(error instanceof Error ? error.message : "Failed to open file picker.");
               });
             }}
-            label="Open a source file from disk"
+            onFilesDrop={(files) => void handleDroppedSource(files)}
+            label="Choose a file"
             hint={tauriReady ? undefined : "Tauri runtime not detected. Launch with `npm run tauri dev` instead of `npm run dev`."}
           />
           {activeFile && (

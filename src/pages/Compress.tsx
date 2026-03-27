@@ -12,7 +12,7 @@ import { useJobStore } from "@/stores/jobStore";
 import { useWorkspaceStore } from "@/stores/workspaceStore";
 import { pickOutputPath, revealInExplorer } from "@/lib/media-client";
 import { buildDefaultOutputPath, buildSuggestedOutputName, normalizeWorkflowOutputPath } from "@/lib/media-helpers";
-import type { MediaJobRequest } from "@/lib/media-types";
+import type { MediaJobRequest, SelectedFile } from "@/lib/media-types";
 
 const qualityToCrf = (quality: number) => {
   const normalized = Math.max(0, Math.min(100, quality));
@@ -113,10 +113,20 @@ export function Compress() {
     toast("Compression cancelled");
   };
 
+  const handleDroppedSource = async (files: SelectedFile[]) => {
+    const sourceFile = files.find((file) => file.kind === "video" || file.kind === "audio");
+    if (!sourceFile) {
+      toast.error("Drop a video or audio file.");
+      return;
+    }
+
+    await useWorkspaceStore.getState().selectActiveFile(sourceFile);
+  };
+
   return (
     <div className="mx-auto max-w-3xl space-y-8 animate-in fade-in duration-500">
       <div>
-        <h2 className="text-3xl font-bold tracking-tight">Compress Media</h2>
+        <h2 className="text-3xl font-bold tracking-tight">Compress</h2>
       </div>
 
       <SourceWorkspaceCard
@@ -126,7 +136,8 @@ export function Compress() {
             toast.error(error instanceof Error ? error.message : "Failed to open the file picker.");
           });
         }}
-        title="Source file"
+        onDropSource={(files) => void handleDroppedSource(files)}
+        title="Source media"
       />
 
       <Card>

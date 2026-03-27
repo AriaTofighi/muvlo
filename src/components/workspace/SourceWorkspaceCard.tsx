@@ -3,11 +3,13 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { FileDropZone } from "@/components/FileDropZone";
 import { formatDuration, formatFileSize, getMediaDurationSeconds } from "@/lib/media-helpers";
+import type { SelectedFile } from "@/lib/media-types";
 import type { WorkspaceFile } from "@/stores/workspaceStore";
 
 interface SourceWorkspaceCardProps {
   activeFile: WorkspaceFile | null;
   onOpenSource: () => void;
+  onDropSource?: (files: SelectedFile[]) => void | Promise<void>;
   title?: string;
   description?: string;
   emptyTitle?: string;
@@ -36,6 +38,7 @@ const KIND_META = {
 export function SourceWorkspaceCard({
   activeFile,
   onOpenSource,
+  onDropSource,
   title = "Source media",
   description,
   emptyTitle = "Choose a file",
@@ -103,6 +106,7 @@ export function SourceWorkspaceCard({
         ) : (
           <FileDropZone
             onBrowse={onOpenSource}
+            onFilesDrop={onDropSource}
             label={emptyTitle}
             hint={undefined}
             className="px-6 py-8"

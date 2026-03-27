@@ -112,7 +112,7 @@ export function Merge() {
   return (
     <div className="mx-auto max-w-3xl space-y-8 animate-in fade-in duration-500">
       <div>
-        <h2 className="text-3xl font-bold tracking-tight">Merge Media</h2>
+        <h2 className="text-3xl font-bold tracking-tight">Merge</h2>
       </div>
 
       <Card>
@@ -152,8 +152,18 @@ export function Merge() {
                 toast.error(error instanceof Error ? error.message : "Failed to open file picker.");
               });
             }}
+            onFilesDrop={async (files) => {
+              const mediaFiles = files.filter((file) => file.kind === "video" || file.kind === "audio");
+              if (mediaFiles.length === 0) {
+                toast.error("Drop video or audio files to merge.");
+                return;
+              }
+
+              addMergeFiles(mediaFiles);
+              toast.success(`Added ${mediaFiles.length} file${mediaFiles.length === 1 ? "" : "s"} to the merge list`);
+            }}
             label="Add files to the merge list"
-            hint="Use the native picker to choose multiple clips or tracks."
+            hint={undefined}
             className="p-6"
           />
 

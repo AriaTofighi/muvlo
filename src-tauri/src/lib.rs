@@ -12,6 +12,7 @@ pub fn run() {
         .plugin(tauri_plugin_opener::init())
         .invoke_handler(tauri::generate_handler![
             ffmpeg::pick_input_files,
+            ffmpeg::resolve_dropped_paths,
             ffmpeg::pick_output_path,
             ffmpeg::get_media_tool_status,
             ffmpeg::start_media_job,

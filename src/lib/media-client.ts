@@ -108,6 +108,20 @@ export function pickInputFiles(args: PickInputFilesArgs = {}) {
   );
 }
 
+export function resolveDroppedPaths(paths: string[]) {
+  ensureTauriRuntime();
+
+  return invoke<RawSelectedFile[]>("resolve_dropped_paths", { paths }).then((files) =>
+    files.map((file) => ({
+      path: file.path,
+      name: file.name,
+      size: file.sizeBytes,
+      extension: file.name.includes(".") ? file.name.split(".").pop()?.toLowerCase() ?? null : null,
+      kind: inferMediaKind(file.name),
+    })),
+  );
+}
+
 function inferMediaKind(fileName: string): SelectedFile["kind"] {
   const extension = fileName.includes(".") ? fileName.split(".").pop()?.toLowerCase() : "";
 

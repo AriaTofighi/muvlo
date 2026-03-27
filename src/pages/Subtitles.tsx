@@ -13,7 +13,7 @@ import { useJobStore } from "@/stores/jobStore";
 import { useWorkspaceStore } from "@/stores/workspaceStore";
 import { pickInputFiles, pickOutputPath, revealInExplorer } from "@/lib/media-client";
 import { SUBTITLE_FILTERS, buildDefaultOutputPath, buildSuggestedOutputName, normalizeWorkflowOutputPath } from "@/lib/media-helpers";
-import type { MediaJobRequest } from "@/lib/media-types";
+import type { MediaJobRequest, SelectedFile } from "@/lib/media-types";
 
 export function Subtitles() {
   const activeFile = useWorkspaceStore((state) => state.activeFile);
@@ -119,6 +119,27 @@ export function Subtitles() {
     toast("Subtitle job cancelled");
   };
 
+  const handleDroppedSource = async (files: SelectedFile[]) => {
+    const sourceFile = files.find((file) => file.kind === "video" || file.kind === "audio");
+    if (!sourceFile) {
+      toast.error("Drop a video file or audio file.");
+      return;
+    }
+
+    await useWorkspaceStore.getState().selectActiveFile(sourceFile);
+  };
+
+  const handleDroppedSubtitle = async (files: SelectedFile[]) => {
+    const nextSubtitle = files.find((file) => file.kind === "subtitle");
+    if (!nextSubtitle) {
+      toast.error("Drop an .srt, .vtt, or .ass subtitle file.");
+      return;
+    }
+
+    setSubtitleFile(nextSubtitle);
+    toast.success(`Subtitle loaded: ${nextSubtitle.name}`);
+  };
+
   return (
     <div className="mx-auto max-w-3xl space-y-8 animate-in fade-in duration-500">
       <div>
@@ -132,6 +153,7 @@ export function Subtitles() {
             toast.error(error instanceof Error ? error.message : "Failed to open the file picker.");
           });
         }}
+        onDropSource={(files) => void handleDroppedSource(files)}
         title="Source video"
       />
 
@@ -153,6 +175,7 @@ export function Subtitles() {
                   toast.error(error instanceof Error ? error.message : "Failed to pick subtitle file.");
                 });
               }}
+              onFilesDrop={(files) => void handleDroppedSubtitle(files)}
               label="Choose a subtitle file"
               hint={undefined}
               className="py-6"
