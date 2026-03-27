@@ -17,10 +17,18 @@ const qualityToCrf = (quality: number) => {
   return Math.round(35 - (normalized / 100) * 17);
 };
 
+const normalizeQualityValue = (value: number | readonly number[]) => {
+  if (Array.isArray(value)) {
+    return value[0] ?? 70;
+  }
+
+  return value;
+};
+
 export function Compress() {
   const activeFile = useWorkspaceStore((state) => state.activeFile);
   const { jobs, enqueueJob, startJob, cancelJob } = useJobStore();
-  const [quality, setQuality] = useState([70]);
+  const [quality, setQuality] = useState(70);
   const [outputPath, setOutputPath] = useState("");
 
   useEffect(() => {
@@ -58,7 +66,7 @@ export function Compress() {
         kind: "compress",
         inputPath: activeFile.path,
         outputPath: normalizedOutput.path,
-        quality: quality[0],
+        quality,
         overwrite: true,
       },
     };
@@ -71,7 +79,7 @@ export function Compress() {
     });
 
     await startJob(request.jobId);
-    toast.success(`Started compression at quality ${quality[0]}%`);
+    toast.success(`Started compression at quality ${quality}%`);
   };
 
   const chooseOutput = async () => {
@@ -121,15 +129,15 @@ export function Compress() {
         </CardHeader>
         <CardContent className="space-y-6 pt-2">
           <Slider
-            value={quality}
+            value={[quality]}
             max={100}
             step={1}
-            onValueChange={(value) => setQuality(value as number[])}
+            onValueChange={(value) => setQuality(normalizeQualityValue(value))}
           />
           <div className="flex justify-between text-sm text-muted-foreground">
             <span>Smaller File</span>
             <span className="font-mono font-medium text-foreground">
-              {quality[0]}% Quality / CRF {qualityToCrf(quality[0])}
+              {quality}% Quality / CRF {qualityToCrf(quality)}
             </span>
             <span>Higher Quality</span>
           </div>
