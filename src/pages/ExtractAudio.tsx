@@ -12,7 +12,7 @@ import { useSourceFileActions } from "@/hooks/useSourceFileActions";
 import { useJobStore } from "@/stores/jobStore";
 import { useWorkspaceStore } from "@/stores/workspaceStore";
 import { pickOutputPath, revealInExplorer } from "@/lib/media-client";
-import { buildDefaultOutputPath, buildSuggestedOutputName, normalizeWorkflowOutputPath } from "@/lib/media-helpers";
+import { VIDEO_AND_AUDIO_FILTERS, buildDefaultOutputPath, buildSuggestedOutputName, normalizeWorkflowOutputPath } from "@/lib/media-helpers";
 import type { MediaJobRequest, SelectedFile } from "@/lib/media-types";
 
 export function ExtractAudio() {
@@ -121,7 +121,7 @@ export function ExtractAudio() {
       <SourceWorkspaceCard
         activeFile={activeFile}
         onOpenSource={() => {
-          void openSourceFile().catch((error) => {
+          void openSourceFile({ filters: VIDEO_AND_AUDIO_FILTERS }).catch((error) => {
             toast.error(error instanceof Error ? error.message : "Failed to open the file picker.");
           });
         }}

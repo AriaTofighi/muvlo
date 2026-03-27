@@ -215,6 +215,7 @@ struct CommandPlan {
 enum MediaFlavor {
     Video,
     AudioOnly,
+    Image,
     Unknown,
 }
 
@@ -598,15 +599,31 @@ fn build_convert_plan(request: &ConvertJobRequest) -> Result<CommandPlan, String
                 .unwrap_or_else(|| "aac".to_string());
             args.extend(["-c:a".to_string(), codec]);
         }
+        MediaFlavor::Image => {
+            args.push("-an".to_string());
+            let codec = request.video_codec.clone().unwrap_or_else(|| {
+                if output_ext == "webp" {
+                    "libwebp".to_string()
+                } else if output_ext == "gif" {
+                    "gif".to_string()
+                } else {
+                    "copy".to_string()
+                }
+            });
+            args.extend(["-c:v".to_string(), codec]);
+        }
         _ => {
-            let video_codec = request
-                .video_codec
-                .clone()
-                .unwrap_or_else(|| "libx264".to_string());
-            let audio_codec = request
-                .audio_codec
-                .clone()
-                .unwrap_or_else(|| "aac".to_string());
+            let video_codec = request.video_codec.clone().unwrap_or_else(|| {
+                if output_ext == "webp" {
+                    "libwebp".to_string()
+                } else if output_ext == "gif" {
+                    "gif".to_string()
+                } else {
+                    "libx264".to_string()
+                }
+            });
+
+            let audio_codec = request.audio_codec.clone().unwrap_or_else(|| "aac".to_string());
             let subtitle_codec = request
                 .subtitle_codec
                 .clone()
@@ -676,7 +693,11 @@ fn build_trim_plan(request: &TrimJobRequest) -> Result<CommandPlan, String> {
 }
 
 fn build_compress_plan(request: &CompressJobRequest) -> Result<CommandPlan, String> {
-    let flavor = detect_media_flavor(Path::new(&request.input_path));
+    let input_path = Path::new(&request.input_path);
+    let output_path = Path::new(&request.output_path);
+    let output_ext = normalized_extension(output_path);
+    let flavor = detect_media_flavor(input_path);
+
     let mut args = vec![
         "-y".to_string(),
         "-i".to_string(),
@@ -685,41 +706,58 @@ fn build_compress_plan(request: &CompressJobRequest) -> Result<CommandPlan, Stri
     args.push("-map".to_string());
     args.push("0".to_string());
 
-    if matches!(flavor, MediaFlavor::AudioOnly) {
-        args.extend([
-            "-vn".to_string(),
-            "-c:a".to_string(),
-            "aac".to_string(),
-            "-b:a".to_string(),
-            request
-                .audio_bitrate
-                .clone()
-                .unwrap_or_else(|| quality_to_audio_bitrate(request.quality)),
-        ]);
-    } else {
-        let crf = quality_to_crf(request.quality);
-        args.extend([
-            "-c:v".to_string(),
-            "libx264".to_string(),
-            "-crf".to_string(),
-            crf.to_string(),
-        ]);
-
-        if let Some(preset) = &request.preset {
-            args.extend(["-preset".to_string(), preset.clone()]);
-        } else {
-            args.extend(["-preset".to_string(), "medium".to_string()]);
+    match flavor {
+        MediaFlavor::AudioOnly => {
+            args.extend([
+                "-vn".to_string(),
+                "-c:a".to_string(),
+                "aac".to_string(),
+                "-b:a".to_string(),
+                request
+                    .audio_bitrate
+                    .clone()
+                    .unwrap_or_else(|| quality_to_audio_bitrate(request.quality)),
+            ]);
         }
+        MediaFlavor::Image => {
+            args.push("-an".to_string());
+            let codec = if output_ext == "webp" {
+                "libwebp"
+            } else if output_ext == "gif" {
+                "gif"
+            } else {
+                "copy"
+            };
+            args.extend(["-c:v".to_string(), codec.to_string()]);
 
-        args.extend([
-            "-c:a".to_string(),
-            "aac".to_string(),
-            "-b:a".to_string(),
-            request
-                .audio_bitrate
-                .clone()
-                .unwrap_or_else(|| "128k".to_string()),
-        ]);
+            // For images, we use -q:v which maps well to the 0-100 range for most image encoders
+            args.extend(["-q:v".to_string(), request.quality.to_string()]);
+        }
+        _ => {
+            let crf = quality_to_crf(request.quality);
+            args.extend([
+                "-c:v".to_string(),
+                "libx264".to_string(),
+                "-crf".to_string(),
+                crf.to_string(),
+            ]);
+
+            if let Some(preset) = &request.preset {
+                args.extend(["-preset".to_string(), preset.clone()]);
+            } else {
+                args.extend(["-preset".to_string(), "medium".to_string()]);
+            }
+
+            args.extend([
+                "-c:a".to_string(),
+                "aac".to_string(),
+                "-b:a".to_string(),
+                request
+                    .audio_bitrate
+                    .clone()
+                    .unwrap_or_else(|| "128k".to_string()),
+            ]);
+        }
     }
 
     args.push(request.output_path.clone());
@@ -832,11 +870,23 @@ fn build_subtitles_plan(request: &SubtitlesJobRequest) -> Result<CommandPlan, St
 }
 
 fn detect_media_flavor(path: &Path) -> MediaFlavor {
+    let ext = normalized_extension(path);
+    if is_image_extension(&ext) {
+        return MediaFlavor::Image;
+    }
+
     match futures_lite_probe(path) {
         Some(true) => MediaFlavor::Video,
         Some(false) => MediaFlavor::AudioOnly,
         None => MediaFlavor::Unknown,
     }
+}
+
+fn is_image_extension(ext: &str) -> bool {
+    matches!(
+        ext,
+        "png" | "jpg" | "jpeg" | "webp" | "gif" | "avif" | "bmp" | "tiff"
+    )
 }
 
 fn futures_lite_probe(path: &Path) -> Option<bool> {

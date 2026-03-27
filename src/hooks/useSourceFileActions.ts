@@ -5,6 +5,7 @@ import { useWorkspaceStore } from "@/stores/workspaceStore";
 
 interface OpenSourceFileOptions {
   navigateTo?: string | null;
+  filters?: typeof MEDIA_FILTERS;
 }
 
 export function useSourceFileActions() {
@@ -14,7 +15,7 @@ export function useSourceFileActions() {
   const openSourceFile = async (options: OpenSourceFileOptions = {}) => {
     const [file] = await pickInputFiles({
       multiple: false,
-      filters: MEDIA_FILTERS,
+      filters: options.filters ?? MEDIA_FILTERS,
     });
 
     if (!file) {

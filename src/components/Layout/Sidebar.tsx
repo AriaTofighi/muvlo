@@ -23,8 +23,8 @@ import { toast } from "sonner";
 const NAV_ITEMS = [
   { path: "/", label: "Dashboard", icon: LayoutDashboard },
   { path: "/convert", label: "Convert", icon: FileVideo },
-  { path: "/trim", label: "Trim", icon: Scissors },
   { path: "/compress", label: "Compress", icon: Minimize },
+  { path: "/trim", label: "Trim", icon: Scissors },
   { path: "/merge", label: "Merge", icon: Combine },
   { path: "/extract-audio", label: "Extract Audio", icon: Music },
   { path: "/subtitles", label: "Subtitles", icon: Type },

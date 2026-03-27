@@ -13,7 +13,7 @@ import { useSourceFileActions } from "@/hooks/useSourceFileActions";
 import { useJobStore } from "@/stores/jobStore";
 import { useWorkspaceStore } from "@/stores/workspaceStore";
 import { pickInputFiles, pickOutputPath, revealInExplorer } from "@/lib/media-client";
-import { SUBTITLE_FILTERS, buildDefaultOutputPath, buildSuggestedOutputName, normalizeWorkflowOutputPath } from "@/lib/media-helpers";
+import { SUBTITLE_FILTERS, VIDEO_FILTERS, buildDefaultOutputPath, buildSuggestedOutputName, normalizeWorkflowOutputPath } from "@/lib/media-helpers";
 import type { MediaJobRequest, SelectedFile } from "@/lib/media-types";
 
 export function Subtitles() {
@@ -121,9 +121,9 @@ export function Subtitles() {
   };
 
   const handleDroppedSource = async (files: SelectedFile[]) => {
-    const sourceFile = files.find((file) => file.kind === "video" || file.kind === "audio");
+    const sourceFile = files.find((file) => file.kind === "video");
     if (!sourceFile) {
-      toast.error("Drop a video file or audio file.");
+      toast.error("Drop a video file.");
       return;
     }
 
@@ -150,7 +150,7 @@ export function Subtitles() {
       <SourceWorkspaceCard
         activeFile={activeFile}
         onOpenSource={() => {
-          void openSourceFile().catch((error) => {
+          void openSourceFile({ filters: VIDEO_FILTERS }).catch((error) => {
             toast.error(error instanceof Error ? error.message : "Failed to open the file picker.");
           });
         }}

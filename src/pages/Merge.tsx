@@ -10,7 +10,7 @@ import { toast } from "sonner";
 import { useJobStore } from "@/stores/jobStore";
 import { useWorkspaceStore } from "@/stores/workspaceStore";
 import { pickInputFiles, pickOutputPath, revealInExplorer } from "@/lib/media-client";
-import { MEDIA_FILTERS, buildDefaultOutputPath, buildSuggestedOutputName, normalizeWorkflowOutputPath } from "@/lib/media-helpers";
+import { VIDEO_AND_AUDIO_FILTERS, buildDefaultOutputPath, buildSuggestedOutputName, normalizeWorkflowOutputPath } from "@/lib/media-helpers";
 import type { MediaJobRequest } from "@/lib/media-types";
 
 export function Merge() {
@@ -42,7 +42,7 @@ export function Merge() {
   const handleAddFiles = async () => {
     const nextFiles = await pickInputFiles({
       multiple: true,
-      filters: MEDIA_FILTERS,
+      filters: VIDEO_AND_AUDIO_FILTERS,
     });
 
     if (nextFiles.length === 0) {

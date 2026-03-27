@@ -11,12 +11,13 @@ import {
 interface FormatPickerProps {
   value: string;
   onChange: (val: string) => void;
-  type?: "video" | "audio" | "all";
+  type?: "video" | "audio" | "image" | "all";
 }
 
 const FORMATS = {
   video: ["mp4", "mkv", "webm", "avi", "mov"],
   audio: ["mp3", "aac", "wav", "flac", "ogg"],
+  image: ["png", "jpg", "webp", "gif", "avif"],
 };
 
 export function FormatPicker({ value, onChange, type = "all" }: FormatPickerProps) {
@@ -40,6 +41,16 @@ export function FormatPicker({ value, onChange, type = "all" }: FormatPickerProp
           <SelectGroup>
             <SelectLabel>Audio Formats</SelectLabel>
             {FORMATS.audio.map((fmt) => (
+              <SelectItem key={fmt} value={fmt}>
+                .{fmt}
+              </SelectItem>
+            ))}
+          </SelectGroup>
+        )}
+        {(type === "all" || type === "image") && (
+          <SelectGroup>
+            <SelectLabel>Image Formats</SelectLabel>
+            {FORMATS.image.map((fmt) => (
               <SelectItem key={fmt} value={fmt}>
                 .{fmt}
               </SelectItem>

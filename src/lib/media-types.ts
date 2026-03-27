@@ -1,4 +1,4 @@
-export type MediaKind = "video" | "audio" | "subtitle" | "unknown";
+export type MediaKind = "video" | "audio" | "subtitle" | "image" | "unknown";
 
 export interface SelectedFile {
   path: string;

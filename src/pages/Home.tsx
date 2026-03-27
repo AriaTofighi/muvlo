@@ -35,9 +35,9 @@ export function Home() {
   };
 
   const handleDroppedSource = async (files: SelectedFile[]) => {
-    const sourceFile = files.find((file) => file.kind === "video" || file.kind === "audio");
+    const sourceFile = files.find((file) => file.kind === "video" || file.kind === "audio" || file.kind === "image");
     if (!sourceFile) {
-      toast.error("Drop a video or audio file.");
+      toast.error("Drop a video, audio, or image file.");
       return;
     }
 
@@ -47,8 +47,8 @@ export function Home() {
 
   const workflows = [
     { title: "Convert", desc: "Change formats", path: "/convert", icon: FileVideo },
-    { title: "Trim", desc: "Cut video length", path: "/trim", icon: Scissors },
     { title: "Compress", desc: "Reduce file size", path: "/compress", icon: Minimize },
+    { title: "Trim", desc: "Cut video length", path: "/trim", icon: Scissors },
     { title: "Merge", desc: "Join multiple files", path: "/merge", icon: Combine },
     { title: "Extract Audio", desc: "Save track to MP3", path: "/extract-audio", icon: Music },
     { title: "Subtitles", desc: "Add or burn subs", path: "/subtitles", icon: Type },

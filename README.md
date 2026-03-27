@@ -9,9 +9,9 @@ Built with **Tauri v2**, **React**, **TypeScript**, and **shadcn/ui**.
 - 🎨 **Cinematic UI**: A dark-first, beautiful interface with smooth micro-animations.
 - ⚡ **Native Performance**: Powered by a Rust backend with extremely low memory usage.
 - 🎬 **6 Core Workflows**:
-  - **Convert**: Transcode video and audio formats.
-  - **Trim**: Visually cut the start and end of videos without re-encoding.
-  - **Compress**: Reduce file size using a simple quality slider.
+  - **Convert**: Transcode video, audio, and image formats.
+  - **Trim**: Visually cut the start and end of videos or audio clips.
+  - **Compress**: Reduce file size for media using a simple quality slider.
   - **Merge**: Quickly join multiple clips via drag-and-drop.
   - **Extract Audio**: Pull high-quality audio tracks from video files.
   - **Subtitles**: Add soft or hardcoded subtitles.

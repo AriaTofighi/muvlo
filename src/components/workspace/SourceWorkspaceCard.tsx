@@ -1,4 +1,4 @@
-import { AudioLines, Captions, Film, FileQuestion, LoaderCircle, RefreshCw, Trash2 } from "lucide-react";
+import { AudioLines, Captions, Film, FileQuestion, ImageIcon, LoaderCircle, RefreshCw, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { FileDropZone } from "@/components/FileDropZone";
@@ -25,6 +25,10 @@ const KIND_META = {
   audio: {
     icon: AudioLines,
     label: "Audio source",
+  },
+  image: {
+    icon: ImageIcon,
+    label: "Image source",
   },
   subtitle: {
     icon: Captions,
@@ -95,17 +99,21 @@ export function SourceWorkspaceCard({
               </div>
             </div>
 
-            <div className="grid grid-cols-3 gap-6 px-1">
+            <div className={`grid ${activeFile.kind === "image" ? "grid-cols-2" : "grid-cols-3"} gap-6 px-1`}>
               <div className="space-y-1.5">
                 <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/60">Size</p>
                 <p className="text-sm font-medium text-foreground/90">{formatFileSize(activeFile.size)}</p>
               </div>
+              {activeFile.kind !== "image" && (
+                <div className="space-y-1.5">
+                  <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/60">Duration</p>
+                  <p className="text-sm font-medium text-foreground/90">{duration}</p>
+                </div>
+              )}
               <div className="space-y-1.5">
-                <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/60">Duration</p>
-                <p className="text-sm font-medium text-foreground/90">{duration}</p>
-              </div>
-              <div className="space-y-1.5">
-                <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/60">Format</p>
+                <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/60">
+                  {activeFile.kind === "image" ? "Dimensions" : "Format"}
+                </p>
                 <p className="text-sm font-medium text-foreground/90">
                   {videoStream?.width && videoStream?.height ? `${videoStream.width}x${videoStream.height}` : activeFile.extension?.toUpperCase() ?? "Unknown"}
                 </p>

@@ -28,7 +28,19 @@ export function Convert() {
 
   useEffect(() => {
     if (activeFile) {
-      setOutputPath(buildDefaultOutputPath(activeFile, format, "-converted"));
+      const isVideoFmt = ["mp4", "mkv", "webm", "avi", "mov"].includes(format);
+      const isAudioFmt = ["mp3", "aac", "wav", "flac", "ogg"].includes(format);
+      const isImageFmt = ["png", "jpg", "webp", "gif", "avif"].includes(format);
+
+      let targetFmt = format;
+      if (activeFile.kind === "image" && !isImageFmt) targetFmt = "webp";
+      else if (activeFile.kind === "audio" && !isAudioFmt) targetFmt = "mp3";
+      else if (activeFile.kind === "video" && !isVideoFmt) targetFmt = "mp4";
+
+      if (targetFmt !== format) {
+        setFormat(targetFmt);
+      }
+      setOutputPath(buildDefaultOutputPath(activeFile, targetFmt, "-converted"));
     } else {
       setOutputPath("");
     }
@@ -106,9 +118,9 @@ export function Convert() {
   };
 
   const handleDroppedSource = async (files: SelectedFile[]) => {
-    const sourceFile = files.find((file) => file.kind === "video" || file.kind === "audio");
+    const sourceFile = files.find((file) => file.kind === "video" || file.kind === "audio" || file.kind === "image");
     if (!sourceFile) {
-      toast.error("Drop a video or audio file.");
+      toast.error("Drop a video, audio, or image file.");
       return;
     }
 
@@ -139,7 +151,11 @@ export function Convert() {
         <CardContent className="space-y-4">
           <div className="grid gap-2">
             <span className="text-sm font-medium">Output Format</span>
-            <FormatPicker value={format} onChange={setFormat} />
+            <FormatPicker
+              value={format}
+              onChange={setFormat}
+              type={activeFile?.kind === "video" || activeFile?.kind === "audio" || activeFile?.kind === "image" ? activeFile.kind : "all"}
+            />
           </div>
 
           <Separator className="my-1" />

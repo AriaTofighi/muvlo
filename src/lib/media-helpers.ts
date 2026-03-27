@@ -1,7 +1,11 @@
 import type { FileDialogFilter, MediaInfo, SelectedFile } from "./media-types";
 
 export const MEDIA_FILTERS: FileDialogFilter[] = [
-  { name: "Media", extensions: ["mp4", "mpg4", "mov", "mkv", "webm", "avi", "mp3", "wav", "flac", "aac", "ogg"] },
+  { name: "Media", extensions: ["mp4", "mpg4", "mov", "mkv", "webm", "avi", "mp3", "wav", "flac", "aac", "ogg", "m4a", "png", "jpg", "jpeg", "webp", "gif", "avif"] },
+];
+
+export const VIDEO_AND_AUDIO_FILTERS: FileDialogFilter[] = [
+  { name: "Media", extensions: ["mp4", "mpg4", "mov", "mkv", "webm", "avi", "mp3", "wav", "flac", "aac", "ogg", "m4a"] },
 ];
 
 export const VIDEO_FILTERS: FileDialogFilter[] = [
@@ -10,6 +14,10 @@ export const VIDEO_FILTERS: FileDialogFilter[] = [
 
 export const AUDIO_FILTERS: FileDialogFilter[] = [
   { name: "Audio", extensions: ["mp3", "wav", "flac", "aac", "ogg", "m4a"] },
+];
+
+export const IMAGE_FILTERS: FileDialogFilter[] = [
+  { name: "Images", extensions: ["png", "jpg", "jpeg", "webp", "gif", "avif", "bmp", "tiff"] },
 ];
 
 export const SUBTITLE_FILTERS: FileDialogFilter[] = [

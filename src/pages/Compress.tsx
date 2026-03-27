@@ -37,7 +37,7 @@ export function Compress() {
 
   useEffect(() => {
     if (activeFile) {
-      setOutputPath(buildDefaultOutputPath(activeFile, activeFile.extension ?? "mp4", "-compressed"));
+      setOutputPath(buildDefaultOutputPath(activeFile, activeFile.extension || (activeFile.kind === "image" ? "webp" : "mp4"), "-compressed"));
     } else {
       setOutputPath("");
     }
@@ -97,7 +97,7 @@ export function Compress() {
     }
 
     const nextPath = await pickOutputPath({
-      suggestedName: buildSuggestedOutputName(activeFile, activeFile.extension ?? "mp4", "-compressed"),
+      suggestedName: buildSuggestedOutputName(activeFile, activeFile.extension || (activeFile.kind === "image" ? "webp" : "mp4"), "-compressed"),
     });
 
     if (nextPath) {
@@ -115,9 +115,9 @@ export function Compress() {
   };
 
   const handleDroppedSource = async (files: SelectedFile[]) => {
-    const sourceFile = files.find((file) => file.kind === "video" || file.kind === "audio");
+    const sourceFile = files.find((file) => file.kind === "video" || file.kind === "audio" || file.kind === "image");
     if (!sourceFile) {
-      toast.error("Drop a video or audio file.");
+      toast.error("Drop a video, audio, or image file.");
       return;
     }
 

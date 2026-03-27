@@ -141,6 +141,10 @@ function inferMediaKind(fileName: string): SelectedFile["kind"] {
     return "video";
   }
 
+  if (["png", "jpg", "jpeg", "webp", "gif", "avif", "bmp", "tiff"].includes(extension)) {
+    return "image";
+  }
+
   return "unknown";
 }
 
