@@ -37,13 +37,10 @@ export function Sidebar() {
 
   return (
     <ShadcnSidebar variant="inset">
-      <SidebarHeader className="border-b border-sidebar-border/70 p-3">
-        <Link to="/" className="flex items-center gap-3 rounded-xl px-2 py-1">
-          <MuvloMark className="size-10 rounded-xl" />
-          <div className="min-w-0">
-            <p className="truncate text-base font-semibold tracking-tight text-sidebar-foreground">Muvlo</p>
-            <p className="truncate text-xs text-sidebar-foreground/60">Media workflows</p>
-          </div>
+      <SidebarHeader className="border-b border-border p-4">
+        <Link to="/" className="flex items-center gap-2.5 px-0.5 mt-0.5 mb-1 opacity-90 hover:opacity-100 transition-opacity">
+          <MuvloMark className="size-7" />
+          <span className="text-[17px] font-semibold tracking-tight text-sidebar-foreground">Muvlo</span>
         </Link>
       </SidebarHeader>
       <SidebarContent>
@@ -70,9 +67,9 @@ export function Sidebar() {
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
-      <SidebarFooter className="border-t border-sidebar-border/70 p-3 space-y-3">
+      <SidebarFooter className="border-t border-border px-2.5 py-3 space-y-2.5">
         {activeFile && (
-          <div className="min-w-0 rounded-lg bg-sidebar-accent/40 px-3 py-2">
+          <div className="min-w-0 rounded-lg bg-sidebar-accent/40 px-2.5 py-2">
             <p className="truncate text-xs font-medium text-sidebar-foreground">{activeFile.name}</p>
             <p className="text-[11px] text-sidebar-foreground/50">Active source</p>
           </div>

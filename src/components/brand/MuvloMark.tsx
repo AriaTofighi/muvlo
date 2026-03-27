@@ -6,38 +6,21 @@ interface MuvloMarkProps {
 
 export function MuvloMark({ className }: MuvloMarkProps) {
   return (
-    <div
+    <svg
+      viewBox="0 0 100 100"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      className={cn("text-primary drop-shadow-sm", className)}
       aria-hidden="true"
-      className={cn(
-        "flex aspect-square items-center justify-center rounded-xl border bg-muted/40 text-accent",
-        className,
-      )}
     >
-      <svg viewBox="0 0 64 64" className="h-[72%] w-[72%]" fill="none">
-        <path
-          d="M17 36C17 24.402 26.402 15 38 15H47"
-          stroke="currentColor"
-          opacity="0.95"
-          strokeLinecap="round"
-          strokeWidth="6"
-        />
-        <path
-          d="M47 49H38C29.716 49 23 42.284 23 34"
-          stroke="currentColor"
-          opacity="0.95"
-          strokeLinecap="round"
-          strokeWidth="6"
-        />
-        <path
-          d="M21 21L32.4 32L21 43"
-          stroke="currentColor"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          strokeWidth="6"
-        />
-        <circle cx="47" cy="15" r="4" fill="currentColor" opacity="0.95" />
-        <circle cx="47" cy="49" r="4" fill="currentColor" opacity="0.75" />
-      </svg>
-    </div>
+      <path
+        d="M 18,82 L 34,22 L 50,56 L 66,22 L 82,82"
+        stroke="currentColor"
+        strokeWidth="14"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <circle cx="50" cy="82" r="7" fill="currentColor" />
+    </svg>
   );
 }
