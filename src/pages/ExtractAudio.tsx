@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { FormatPicker } from "@/components/FormatPicker";
 import { SourceWorkspaceCard } from "@/components/workspace/SourceWorkspaceCard";
 import { Progress } from "@/components/ui/progress";
+import { Separator } from "@/components/ui/separator";
 import { Folder, Play, Save, Square } from "lucide-react";
 import { toast } from "sonner";
 import { useSourceFileActions } from "@/hooks/useSourceFileActions";
@@ -137,7 +138,8 @@ export function ExtractAudio() {
             <span className="text-sm font-medium">Output Format</span>
             <FormatPicker value={format} onChange={setFormat} type="audio" />
           </div>
-          <div className="grid gap-2">
+          <Separator className="my-1" />
+          <div className="grid gap-2 pt-3">
             <span className="text-sm font-medium">Output Path</span>
             <div className="flex flex-col gap-3 sm:flex-row">
               <Input value={outputPath} onChange={(event) => setOutputPath(event.target.value)} placeholder="Choose where to save the extracted audio" />

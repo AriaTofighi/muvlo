@@ -5,6 +5,7 @@ import { FileDropZone } from "@/components/FileDropZone";
 import { Input } from "@/components/ui/input";
 import { Combine, Folder, GripVertical, Plus, Save, Square, Trash2, FileVideo } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
+import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner";
 import { useJobStore } from "@/stores/jobStore";
 import { useWorkspaceStore } from "@/stores/workspaceStore";
@@ -180,7 +181,9 @@ export function Merge() {
             className="p-6"
           />
 
-          <div className="grid gap-2 pt-4">
+          <Separator className="my-1" />
+
+          <div className="grid gap-2 pt-3">
             <span className="text-sm font-medium">Output Path</span>
             <div className="flex flex-col gap-3 sm:flex-row">
               <Input value={outputPath} onChange={(event) => setOutputPath(event.target.value)} placeholder="Choose where to save the merged file" />

@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { SourceWorkspaceCard } from "@/components/workspace/SourceWorkspaceCard";
 import { Progress } from "@/components/ui/progress";
+import { Separator } from "@/components/ui/separator";
 import { Folder, Type, Play, Save, Square, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { useSourceFileActions } from "@/hooks/useSourceFileActions";
@@ -207,7 +208,9 @@ export function Subtitles() {
             </SelectContent>
           </Select>
 
-          <div className="grid gap-2">
+          <Separator className="my-1" />
+
+          <div className="grid gap-2 pt-3">
             <span className="text-sm font-medium">Output Path</span>
             <div className="flex flex-col gap-3 sm:flex-row">
               <Input value={outputPath} onChange={(event) => setOutputPath(event.target.value)} placeholder="Choose where to save the subtitled video" />

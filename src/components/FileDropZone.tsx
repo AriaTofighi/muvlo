@@ -1,8 +1,7 @@
 import { useState, useCallback, useEffect, useId, useRef } from "react";
-import { UploadCloud } from "lucide-react";
+import { Plus } from "lucide-react";
 import { getCurrentWebview } from "@tauri-apps/api/webview";
 import { cn } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
 import { hasTauriRuntime, resolveDroppedPaths } from "@/lib/media-client";
 import type { SelectedFile } from "@/lib/media-types";
 
@@ -14,7 +13,6 @@ interface FileDropZoneProps {
   className?: string;
   label?: string;
   hint?: string;
-  browseLabel?: string;
 }
 
 export function FileDropZone({
@@ -23,13 +21,11 @@ export function FileDropZone({
   onFilesDrop,
   accept = "video/*,audio/*",
   className,
-  label = "Drag & drop a media file here, or click to browse",
+  label = "Drop a media file here or click to browse",
   hint,
-  browseLabel = "Browse",
 }: FileDropZoneProps) {
   const [isDragging, setIsDragging] = useState(false);
   const inputId = useId();
-  const hasHint = Boolean(hint);
   const rootRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -124,7 +120,7 @@ export function FileDropZone({
     <div
       ref={rootRef}
       className={cn(
-        "group relative flex w-full cursor-pointer flex-col items-center justify-center rounded-[1.6rem] border border-dashed border-border/80 bg-muted/24 px-12 py-14 text-center transition-all hover:border-accent/35 hover:bg-muted/36",
+        "group relative flex w-full cursor-pointer flex-col items-center justify-center rounded-2xl border border-border/20 bg-muted/12 px-12 py-12 text-center transition-all duration-300",
         isDragging && "border-accent bg-accent/10",
         className
       )}
@@ -140,22 +136,18 @@ export function FileDropZone({
         className="hidden"
         onChange={handleFileInput}
       />
-      <div className="flex flex-col items-center text-muted-foreground">
-        <UploadCloud
-          className={cn(
-            "h-12 w-12 transition-colors group-hover:text-accent",
-            isDragging && "text-accent"
-          )}
-        />
-        <p className="mt-3 max-w-xl font-medium text-foreground">{label}</p>
-        {hint ? <p className="mt-2 max-w-xl text-sm leading-6">{hint}</p> : null}
-        <Button
-          type="button"
-          variant="secondary"
-          className={cn("pointer-events-none rounded-xl", hasHint ? "mt-4" : "mt-4")}
-        >
-          {browseLabel}
-        </Button>
+      <div className="flex flex-col items-center">
+        <div className="flex shrink-0 items-center justify-center h-12 w-12 rounded-xl bg-muted/20 backdrop-blur-sm transition-all duration-300 group-hover:bg-muted/35">
+          <Plus className="h-5 w-5 text-muted-foreground transition-colors group-hover:text-foreground" />
+        </div>
+        <p className="mt-4 max-w-xl font-medium text-sm text-foreground leading-none">
+          {label}
+        </p>
+        {hint ? (
+          <p className="mt-2 max-w-sm text-[11px] text-muted-foreground/50 leading-relaxed font-medium">
+            {hint}
+          </p>
+        ) : null}
       </div>
     </div>
   );

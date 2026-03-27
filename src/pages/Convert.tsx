@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
+import { Separator } from "@/components/ui/separator";
 import { FormatPicker } from "@/components/FormatPicker";
 import { SourceWorkspaceCard } from "@/components/workspace/SourceWorkspaceCard";
 import { Folder, Play, Save, Square } from "lucide-react";
@@ -141,7 +142,8 @@ export function Convert() {
             <FormatPicker value={format} onChange={setFormat} />
           </div>
 
-          <div className="grid gap-2">
+          <Separator className="my-1" />
+          <div className="grid gap-2 pt-3">
             <span className="text-sm font-medium">Output Path</span>
             <div className="flex flex-col gap-3 sm:flex-row">
               <Input value={outputPath} onChange={(event) => setOutputPath(event.target.value)} placeholder="Choose where to save the converted file" />

@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Slider } from "@/components/ui/slider";
+import { Separator } from "@/components/ui/separator";
 import { SourceWorkspaceCard } from "@/components/workspace/SourceWorkspaceCard";
 import { Progress } from "@/components/ui/progress";
 import { Folder, Scissors, Save, Square } from "lucide-react";
@@ -138,13 +139,15 @@ export function Trim() {
           <CardTitle>Timeline</CardTitle>
         </CardHeader>
         <CardContent className="space-y-6 pt-6">
-          <div className="h-24 w-full rounded-md border bg-muted relative overflow-hidden">
-            <div
-              className="absolute inset-y-0 bg-accent/20 border-x border-accent"
-              style={{ left: `${range[0]}%`, right: `${100 - range[1]}%` }}
-            />
-            <div className="absolute inset-0 flex items-center justify-center text-sm text-muted-foreground">
-              {durationSeconds == null ? "Duration unavailable" : `Duration ${formatDuration(durationSeconds)}`}
+          <div className="rounded-xl border bg-card/40 p-2">
+            <div className="relative h-20 w-full overflow-hidden rounded-[4px] bg-muted">
+              <div
+                className="absolute inset-y-0 bg-accent/20 border-x border-accent"
+                style={{ left: `${range[0]}%`, right: `${100 - range[1]}%` }}
+              />
+              <div className="absolute inset-0 flex items-center justify-center text-sm text-muted-foreground">
+                {durationSeconds == null ? "Load a file to see the timeline" : `Duration ${formatDuration(durationSeconds)}`}
+              </div>
             </div>
           </div>
 
@@ -163,7 +166,9 @@ export function Trim() {
             <span>{formatDuration(endSeconds)} (End)</span>
           </div>
 
-          <div className="grid gap-2">
+          <Separator className="my-1" />
+
+          <div className="grid gap-3 pt-3">
             <span className="text-sm font-medium">Output Path</span>
             <div className="flex flex-col gap-3 sm:flex-row">
               <Input value={outputPath} onChange={(event) => setOutputPath(event.target.value)} placeholder="Choose where to save the trimmed clip" />

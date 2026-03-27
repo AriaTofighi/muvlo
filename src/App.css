@@ -1,7 +1,7 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
-@import "@fontsource-variable/geist";
+@import "@fontsource-variable/outfit";
 
 @custom-variant dark (&:is(.dark *));
 
@@ -12,7 +12,7 @@
 
 @theme inline {
   --font-heading: var(--font-sans);
-  --font-sans: 'Geist Variable', sans-serif;
+  --font-sans: 'Outfit Variable', sans-serif;
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -46,13 +46,13 @@
   --color-card: var(--card);
   --color-foreground: var(--foreground);
   --color-background: var(--background);
-  --radius-sm: calc(var(--radius) * 0.6);
-  --radius-md: calc(var(--radius) * 0.8);
+  --radius-sm: calc(var(--radius) * 0.45);
+  --radius-md: calc(var(--radius) * 0.72);
   --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) * 1.4);
-  --radius-2xl: calc(var(--radius) * 1.8);
-  --radius-3xl: calc(var(--radius) * 2.2);
-  --radius-4xl: calc(var(--radius) * 2.6);
+  --radius-xl: calc(var(--radius) * 1.35);
+  --radius-2xl: calc(var(--radius) * 1.9);
+  --radius-3xl: calc(var(--radius) * 2.4);
+  --radius-4xl: calc(var(--radius) * 2.9);
 }
 
 :root {
@@ -77,7 +77,13 @@
   --border: hsl(214.3 31.8% 91.4%);
   --input: hsl(214.3 31.8% 91.4%);
   --ring: hsl(215 90% 50%);
-  --radius: 0.5rem;
+  --radius: 0.42rem;
+  --surface-border-width: 1.15px;
+  --surface-padding: 1.15rem;
+  --surface-padding-compact: 0.85rem;
+  --surface-blur: 14px;
+  --control-height: 2.25rem;
+  --control-height-compact: 1.95rem;
   --sidebar: hsl(0 0% 98%);
   --sidebar-foreground: hsl(240 5.3% 26.1%);
   --sidebar-primary: hsl(240 5.9% 10%);
@@ -132,24 +138,114 @@
   body {
     @apply bg-background text-foreground antialiased selection:bg-accent/30 selection:text-foreground;
     font-feature-settings: "ss01", "ss03", "cv08", "cv11";
+    line-height: 1.45;
+    letter-spacing: -0.012em;
+    text-rendering: optimizeLegibility;
   }
   html {
     @apply font-sans;
     scrollbar-gutter: stable;
+    scrollbar-width: thin;
   }
   h1, h2, h3, h4, h5, h6 {
-    @apply tracking-tighter font-semibold;
+    @apply font-semibold;
+    letter-spacing: -0.025em;
+    text-wrap: balance;
   }
-  /* Smooth theme transitions and interactive feedback */
   button, a {
-    @apply transition-all duration-200 active:scale-[0.98];
+    @apply transition-[border-color,background-color,color,box-shadow,opacity,transform] duration-150;
   }
   input, textarea, select {
-    @apply transition-all duration-200;
+    @apply transition-[border-color,background-color,box-shadow] duration-150;
   }
 }
 
-/* Custom scrollbar for a more refined SaaS look in dark mode */
+@layer components {
+  [data-slot="card"] {
+    border-radius: var(--radius-2xl);
+    border-width: var(--surface-border-width);
+    backdrop-filter: blur(var(--surface-blur));
+  }
+
+  [data-slot="card-header"],
+  [data-slot="card-content"],
+  [data-slot="card-footer"],
+  [data-slot="dialog-content"],
+  [data-slot="dialog-footer"],
+  [data-slot="sheet-header"],
+  [data-slot="sheet-footer"] {
+    padding-inline: var(--surface-padding);
+  }
+
+  [data-slot="card-footer"],
+  [data-slot="dialog-content"],
+  [data-slot="dialog-footer"],
+  [data-slot="sheet-header"],
+  [data-slot="sheet-footer"] {
+    padding-block: var(--surface-padding);
+  }
+
+  [data-slot="card-title"],
+  [data-slot="dialog-title"],
+  [data-slot="sheet-title"] {
+    font-size: 0.95rem;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    text-transform: none;
+  }
+
+  [data-slot="card-description"],
+  [data-slot="dialog-description"] {
+    max-width: 60ch;
+    line-height: 1.45;
+  }
+
+  button,
+  input,
+  textarea,
+  [data-slot="select-trigger"],
+  [data-slot="select-content"],
+  [data-slot="select-item"],
+  [data-slot="dialog-content"],
+  [data-slot="sheet-content"],
+  .sidebar-menu-button {
+    border-radius: var(--radius-lg);
+  }
+
+  input,
+  textarea,
+  [data-slot="select-trigger"] {
+    min-height: var(--control-height);
+    padding-inline: 0.8rem;
+  }
+
+  [data-slot="select-content"],
+  [data-slot="dialog-content"],
+  [data-slot="sheet-content"] {
+    border-width: var(--surface-border-width);
+    backdrop-filter: blur(var(--surface-blur));
+  }
+
+  .sidebar-menu-button {
+    min-height: var(--control-height);
+    padding-inline: 0.8rem;
+  }
+
+  [data-slot="card"][data-size="sm"] {
+    border-radius: var(--radius-xl);
+  }
+
+  [data-slot="card"][data-size="sm"] [data-slot="card-header"],
+  [data-slot="card"][data-size="sm"] [data-slot="card-content"],
+  [data-slot="card"][data-size="sm"] [data-slot="card-footer"] {
+    padding-inline: var(--surface-padding-compact);
+  }
+
+  [data-slot="card"][data-size="sm"] [data-slot="card-footer"] {
+    padding-block: var(--surface-padding-compact);
+  }
+}
+
 .dark ::-webkit-scrollbar {
   width: 10px;
   height: 10px;
@@ -161,7 +257,6 @@
   @apply bg-muted/50 rounded-full border-2 border-background hover:bg-muted-foreground/30 transition-colors;
 }
 
-/* Premium SaaS Aesthetic Polish */
 .dark body::before {
   content: "";
   position: fixed;
@@ -175,12 +270,10 @@
   z-index: -1;
 }
 
-/* Subtle glow for accent elements in dark mode */
 .dark .text-accent {
   filter: drop-shadow(0 0 8px hsla(210, 100%, 60%, 0.2));
 }
 
-/* Refined transitions for interactive elements */
 .card, .sidebar-menu-button {
   @apply transition-all duration-300;
 }
