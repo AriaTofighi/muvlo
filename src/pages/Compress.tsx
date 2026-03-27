@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Slider } from "@/components/ui/slider";
 import { Progress } from "@/components/ui/progress";
 import { Separator } from "@/components/ui/separator";
+import { FormatPicker } from "@/components/FormatPicker";
 import { SourceWorkspaceCard } from "@/components/workspace/SourceWorkspaceCard";
 import { Folder, Minimize, Save, Square } from "lucide-react";
 import { toast } from "sonner";
@@ -15,10 +16,6 @@ import { pickOutputPath, revealInExplorer } from "@/lib/media-client";
 import { buildDefaultOutputPath, buildSuggestedOutputName, normalizeWorkflowOutputPath } from "@/lib/media-helpers";
 import type { MediaJobRequest, SelectedFile } from "@/lib/media-types";
 
-const qualityToCrf = (quality: number) => {
-  const normalized = Math.max(0, Math.min(100, quality));
-  return Math.round(35 - (normalized / 100) * 17);
-};
 
 const normalizeQualityValue = (value: number | readonly number[]) => {
   if (Array.isArray(value)) {
@@ -33,15 +30,11 @@ export function Compress() {
   const { jobs, enqueueJob, startJob, cancelJob } = useJobStore();
   const { openSourceFile } = useSourceFileActions();
   const [quality, setQuality] = useState(70);
+  const [format, setFormat] = useState("mp4");
   const [outputPath, setOutputPath] = useState("");
 
-  useEffect(() => {
-    if (activeFile) {
-      setOutputPath(buildDefaultOutputPath(activeFile, activeFile.extension || (activeFile.kind === "image" ? "webp" : "mp4"), "-compressed"));
-    } else {
-      setOutputPath("");
-    }
-  }, [activeFile]);
+  const isImage = activeFile?.kind === "image";
+  const isLosslessPng = isImage && format === "png";
 
   const currentJob = useMemo(
     () =>
@@ -55,6 +48,22 @@ export function Compress() {
         ),
     [activeFile?.path, jobs],
   );
+
+  useEffect(() => {
+    if (activeFile) {
+      const targetFmt = isImage ? "webp" : (activeFile.extension || "mp4");
+      setFormat(targetFmt);
+      setOutputPath(buildDefaultOutputPath(activeFile, targetFmt, "-compressed"));
+    } else {
+      setOutputPath("");
+    }
+  }, [activeFile, isImage]);
+
+  useEffect(() => {
+    if (activeFile) {
+      setOutputPath(buildDefaultOutputPath(activeFile, format, "-compressed"));
+    }
+  }, [format]);
 
   const startCompression = async () => {
     if (!activeFile || !outputPath) {
@@ -87,7 +96,7 @@ export function Compress() {
     });
 
     await startJob(request.jobId);
-    toast.success(`Started compression at quality ${quality}%`);
+    toast.success(`Started ${isLosslessPng ? "lossless optimization" : "compression"} at ${quality}%`);
   };
 
   const chooseOutput = async () => {
@@ -97,7 +106,7 @@ export function Compress() {
     }
 
     const nextPath = await pickOutputPath({
-      suggestedName: buildSuggestedOutputName(activeFile, activeFile.extension || (activeFile.kind === "image" ? "webp" : "mp4"), "-compressed"),
+      suggestedName: buildSuggestedOutputName(activeFile, format, "-compressed"),
     });
 
     if (nextPath) {
@@ -144,22 +153,45 @@ export function Compress() {
 
       <Card>
         <CardHeader>
-          <CardTitle>Compression Level</CardTitle>
+          <CardTitle>Compression Settings</CardTitle>
         </CardHeader>
         <CardContent className="space-y-6 pt-2">
-          <Slider
-            value={[quality]}
-            max={100}
-            step={1}
-            onValueChange={(value) => setQuality(normalizeQualityValue(value))}
-          />
-          <div className="flex justify-between text-sm text-muted-foreground">
-            <span>Smaller File</span>
-            <span className="font-mono font-medium text-foreground">
-              {quality}% Quality / CRF {qualityToCrf(quality)}
+          {isImage && (
+            <div className="grid gap-2 pb-2">
+              <span className="text-sm font-medium text-muted-foreground">Output Format</span>
+              <FormatPicker value={format} onChange={setFormat} type="image" />
+            </div>
+          )}
+
+          <div className="space-y-4">
+            <span className="text-sm font-medium text-muted-foreground">
+              {isLosslessPng ? "Compression Effort" : "Quality Target"}
             </span>
-            <span>Higher Quality</span>
+            <Slider
+              value={[quality]}
+              max={100}
+              step={1}
+              onValueChange={(value) => setQuality(normalizeQualityValue(value))}
+            />
+            <div className="flex justify-between text-xs text-muted-foreground">
+              <span>{isLosslessPng ? "Fastest" : "Smallest File"}</span>
+              <span className="font-mono font-medium text-foreground bg-muted/30 px-2 py-0.5 rounded">
+                {quality}% {isLosslessPng ? "Limit" : "Quality"}
+              </span>
+              <span>{isLosslessPng ? "Best Zip" : "Highest Quality"}</span>
+            </div>
           </div>
+
+          {isLosslessPng && (
+            <div className="bg-amber-500/5 border border-amber-500/20 rounded-xl p-3 text-xs text-amber-600/90 leading-relaxed animate-in zoom-in-95 duration-300">
+              <p className="font-semibold flex items-center gap-1.5 mb-1">
+                Note on Lossless Compression
+              </p>
+              <p>
+                PNG is a strictly lossless format. Moving this slider changes how hard the computer tries to "zip" the pixels together, but it won't affect image details. For significant size reduction, consider switching to **WebP** above.
+              </p>
+            </div>
+          )}
 
           <Separator className="my-1" />
           <div className="grid gap-2 pt-3">

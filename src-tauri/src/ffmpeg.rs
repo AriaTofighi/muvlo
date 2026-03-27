@@ -721,17 +721,30 @@ fn build_compress_plan(request: &CompressJobRequest) -> Result<CommandPlan, Stri
         }
         MediaFlavor::Image => {
             args.push("-an".to_string());
-            let codec = if output_ext == "webp" {
-                "libwebp"
-            } else if output_ext == "gif" {
-                "gif"
-            } else {
-                "copy"
-            };
-            args.extend(["-c:v".to_string(), codec.to_string()]);
+            // Strip metadata to ensure better compression
+            args.extend(["-map_metadata".to_string(), "-1".to_string()]);
 
-            // For images, we use -q:v which maps well to the 0-100 range for most image encoders
-            args.extend(["-q:v".to_string(), request.quality.to_string()]);
+            if output_ext == "webp" {
+                args.extend(["-c:v".to_string(), "libwebp".to_string()]);
+                args.extend(["-q:v".to_string(), request.quality.to_string()]);
+            } else if output_ext == "jpg" || output_ext == "jpeg" {
+                // Map 0..100 quality to 31..1 qscale (lower is better for mjpeg)
+                let quality = request.quality.clamp(1, 100) as f32;
+                let qscale = (31.0 - (quality / 100.0) * 30.0).round() as u8;
+                args.extend(["-c:v".to_string(), "mjpeg".to_string()]);
+                args.extend(["-q:v".to_string(), qscale.clamp(1, 31).to_string()]);
+            } else if output_ext == "png" {
+                // PNG is lossless; map higher quality to LOWER compression level for speed, 
+                // but for 'Compression' page, we want smaller files.
+                // Map 0..100 quality to 9..0 compression level (9 is max compression)
+                let quality = request.quality.clamp(0, 100) as f32;
+                let level = (9.0 - (quality / 100.0) * 9.0).round() as u8;
+                args.extend(["-c:v".to_string(), "png".to_string()]);
+                args.extend(["-compression_level".to_string(), level.clamp(0, 9).to_string()]);
+                args.extend(["-pred".to_string(), "mixed".to_string()]);
+            } else {
+                args.extend(["-q:v".to_string(), request.quality.to_string()]);
+            }
         }
         _ => {
             let crf = quality_to_crf(request.quality);
@@ -953,9 +966,10 @@ fn subtitle_codec_for_extension(ext: &str) -> &'static str {
 }
 
 fn quality_to_crf(quality: u8) -> u8 {
-    let quality = quality.min(100);
-    let crf = 28.0 - ((quality as f64 / 100.0) * 10.0);
-    crf.round().clamp(18.0, 28.0) as u8
+    let quality = (quality as f64).clamp(0.0, 100.0);
+    // Map 0..100 to 51..18 (standard x264 range; 51 is worst, 18 is visually lossless)
+    let crf = 51.0 - (quality / 100.0) * (51.0 - 18.0);
+    crf.round() as u8
 }
 
 fn quality_to_audio_bitrate(quality: u8) -> String {
