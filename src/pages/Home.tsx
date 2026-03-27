@@ -72,11 +72,7 @@ export function Home() {
               });
             }}
             label="Open a source file from disk"
-            hint={
-              tauriReady
-                ? "Use the native file picker so FFmpeg can access the real path."
-                : "Tauri runtime not detected. Launch with `npm run tauri dev` instead of `npm run dev`."
-            }
+            hint={tauriReady ? undefined : "Tauri runtime not detected. Launch with `npm run tauri dev` instead of `npm run dev`."}
           />
           {activeFile && (
             <div className="rounded-xl border border-border/60 bg-muted/30 px-4 py-3 text-sm text-muted-foreground">

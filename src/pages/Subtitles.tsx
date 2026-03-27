@@ -133,7 +133,6 @@ export function Subtitles() {
           });
         }}
         title="Source video"
-        emptyDescription="Open a source video here, then add subtitles without leaving this workflow."
       />
 
       <Card>
@@ -155,7 +154,7 @@ export function Subtitles() {
                 });
               }}
               label="Choose a subtitle file"
-              hint="Use the native picker so FFmpeg can read the subtitle path."
+              hint={undefined}
               className="py-6"
             />
           )}

@@ -119,7 +119,6 @@ export function Trim() {
             toast.error(error instanceof Error ? error.message : "Failed to open the file picker.");
           });
         }}
-        emptyDescription="Open a clip here and the timeline will stay in place while you move through the rest of the app."
       />
 
       <Card>

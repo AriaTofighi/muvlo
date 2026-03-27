@@ -19,11 +19,12 @@ export function FileDropZone({
   accept = "video/*,audio/*",
   className,
   label = "Drag & drop a media file here, or click to browse",
-  hint = "Supports most video and audio formats",
-  browseLabel = "Browse Files",
+  hint,
+  browseLabel = "Browse",
 }: FileDropZoneProps) {
   const [isDragging, setIsDragging] = useState(false);
   const inputId = useId();
+  const hasHint = Boolean(hint);
 
   const handleDragOver = useCallback((e: React.DragEvent) => {
     e.preventDefault();
@@ -67,7 +68,7 @@ export function FileDropZone({
   return (
     <div
       className={cn(
-        "group relative flex w-full cursor-pointer flex-col items-center justify-center rounded-[1.6rem] border border-dashed border-border/80 bg-muted/24 p-12 text-center transition-all hover:border-accent/35 hover:bg-muted/36",
+        "group relative flex w-full cursor-pointer flex-col items-center justify-center rounded-[1.6rem] border border-dashed border-border/80 bg-muted/24 px-12 py-14 text-center transition-all hover:border-accent/35 hover:bg-muted/36",
         isDragging && "border-accent bg-accent/10",
         className
       )}
@@ -83,16 +84,20 @@ export function FileDropZone({
         className="hidden"
         onChange={handleFileInput}
       />
-      <div className="flex flex-col items-center gap-4 text-muted-foreground">
+      <div className="flex flex-col items-center text-muted-foreground">
         <UploadCloud
           className={cn(
             "h-12 w-12 transition-colors group-hover:text-accent",
             isDragging && "text-accent"
           )}
         />
-        <p className="max-w-xl font-medium text-foreground">{label}</p>
-        <p className="max-w-xl text-sm leading-6">{hint}</p>
-        <Button type="button" variant="secondary" className="pointer-events-none rounded-xl">
+        <p className="mt-3 max-w-xl font-medium text-foreground">{label}</p>
+        {hint ? <p className="mt-2 max-w-xl text-sm leading-6">{hint}</p> : null}
+        <Button
+          type="button"
+          variant="secondary"
+          className={cn("pointer-events-none rounded-xl", hasHint ? "mt-4" : "mt-4")}
+        >
           {browseLabel}
         </Button>
       </div>

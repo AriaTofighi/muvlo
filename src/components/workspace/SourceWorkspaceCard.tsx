@@ -1,6 +1,7 @@
 import { AudioLines, Captions, Film, FileQuestion, LoaderCircle, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { FileDropZone } from "@/components/FileDropZone";
 import { formatDuration, formatFileSize, getMediaDurationSeconds } from "@/lib/media-helpers";
 import type { WorkspaceFile } from "@/stores/workspaceStore";
 
@@ -10,7 +11,6 @@ interface SourceWorkspaceCardProps {
   title?: string;
   description?: string;
   emptyTitle?: string;
-  emptyDescription?: string;
   replaceLabel?: string;
 }
 
@@ -38,8 +38,7 @@ export function SourceWorkspaceCard({
   onOpenSource,
   title = "Source media",
   description,
-  emptyTitle = "No source selected yet",
-  emptyDescription = "Open a source file and keep working in this workflow.",
+  emptyTitle = "Choose a file",
   replaceLabel = "Replace source",
 }: SourceWorkspaceCardProps) {
   const kindMeta = KIND_META[activeFile?.kind ?? "unknown"];
@@ -102,13 +101,12 @@ export function SourceWorkspaceCard({
             </div>
           </div>
         ) : (
-          <div className="rounded-xl border border-dashed border-border/70 bg-muted/30 p-6 text-center">
-            <h3 className="text-lg font-semibold text-foreground">{emptyTitle}</h3>
-            <p className="mx-auto mt-2 max-w-lg text-sm text-muted-foreground">{emptyDescription}</p>
-            <Button type="button" className="mt-5" onClick={onOpenSource}>
-              Open source file
-            </Button>
-          </div>
+          <FileDropZone
+            onBrowse={onOpenSource}
+            label={emptyTitle}
+            hint={undefined}
+            className="px-6 py-8"
+          />
         )}
       </CardContent>
     </Card>
