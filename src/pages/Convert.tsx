@@ -4,17 +4,20 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
 import { FormatPicker } from "@/components/FormatPicker";
+import { SourceWorkspaceCard } from "@/components/workspace/SourceWorkspaceCard";
 import { Play, Save, Square } from "lucide-react";
 import { toast } from "sonner";
+import { useSourceFileActions } from "@/hooks/useSourceFileActions";
 import { useJobStore } from "@/stores/jobStore";
 import { useWorkspaceStore } from "@/stores/workspaceStore";
 import { pickOutputPath } from "@/lib/media-client";
-import { buildSuggestedOutputName, formatDuration, formatFileSize, getMediaDurationSeconds, normalizeWorkflowOutputPath } from "@/lib/media-helpers";
+import { buildSuggestedOutputName, normalizeWorkflowOutputPath } from "@/lib/media-helpers";
 import type { MediaJobRequest } from "@/lib/media-types";
 
 export function Convert() {
   const activeFile = useWorkspaceStore((state) => state.activeFile);
   const { jobs, enqueueJob, startJob, cancelJob } = useJobStore();
+  const { openSourceFile } = useSourceFileActions();
   const [format, setFormat] = useState("mp4");
   const [outputPath, setOutputPath] = useState("");
 
@@ -97,9 +100,6 @@ export function Convert() {
     toast("Conversion cancelled");
   };
 
-  const duration = formatDuration(getMediaDurationSeconds(activeFile?.mediaInfo));
-  const videoStream = activeFile?.mediaInfo?.streams.find((stream) => stream.codec_type === "video");
-
   return (
     <div className="mx-auto max-w-3xl space-y-6 animate-in fade-in duration-500">
       <div>
@@ -107,23 +107,14 @@ export function Convert() {
         <p className="text-muted-foreground">Transcode your source into a different container format.</p>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Source Media</CardTitle>
-          <CardDescription>
-            {activeFile ? activeFile.name : "No file selected. Go to Dashboard to select a file."}
-          </CardDescription>
-        </CardHeader>
-        {activeFile && (
-          <CardContent className="grid gap-2 text-sm text-muted-foreground sm:grid-cols-3">
-            <span>Size: {formatFileSize(activeFile.size)}</span>
-            <span>Duration: {duration}</span>
-            <span>
-              Resolution: {videoStream?.width && videoStream?.height ? `${videoStream.width}x${videoStream.height}` : "Audio only"}
-            </span>
-          </CardContent>
-        )}
-      </Card>
+      <SourceWorkspaceCard
+        activeFile={activeFile}
+        onOpenSource={() => {
+          void openSourceFile().catch((error) => {
+            toast.error(error instanceof Error ? error.message : "Failed to open the file picker.");
+          });
+        }}
+      />
 
       <Card>
         <CardHeader>

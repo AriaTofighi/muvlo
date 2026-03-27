@@ -4,8 +4,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { FileDropZone } from "@/components/FileDropZone";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { SourceWorkspaceCard } from "@/components/workspace/SourceWorkspaceCard";
 import { Type, Play, Save } from "lucide-react";
 import { toast } from "sonner";
+import { useSourceFileActions } from "@/hooks/useSourceFileActions";
 import { useJobStore } from "@/stores/jobStore";
 import { useWorkspaceStore } from "@/stores/workspaceStore";
 import { pickInputFiles, pickOutputPath } from "@/lib/media-client";
@@ -18,6 +20,7 @@ export function Subtitles() {
   const setSubtitleFile = useWorkspaceStore((state) => state.setSubtitleFile);
   const clearSubtitleFile = useWorkspaceStore((state) => state.clearSubtitleFile);
   const { jobs, enqueueJob, startJob } = useJobStore();
+  const { openSourceFile } = useSourceFileActions();
   const [mode, setMode] = useState("soft");
   const [outputPath, setOutputPath] = useState("");
 
@@ -109,14 +112,16 @@ export function Subtitles() {
         <p className="text-muted-foreground">Mux subtitles as a selectable track or burn them into the video.</p>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Source Video</CardTitle>
-          <CardDescription>
-            {activeFile ? activeFile.name : "Select a file from the Dashboard"}
-          </CardDescription>
-        </CardHeader>
-      </Card>
+      <SourceWorkspaceCard
+        activeFile={activeFile}
+        onOpenSource={() => {
+          void openSourceFile().catch((error) => {
+            toast.error(error instanceof Error ? error.message : "Failed to open the file picker.");
+          });
+        }}
+        title="Source video"
+        emptyDescription="Open a source video here, then add subtitles without leaving this workflow."
+      />
 
       <Card>
         <CardHeader>

@@ -4,8 +4,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input";
 import { Slider } from "@/components/ui/slider";
 import { Progress } from "@/components/ui/progress";
+import { SourceWorkspaceCard } from "@/components/workspace/SourceWorkspaceCard";
 import { Minimize, Save, Square } from "lucide-react";
 import { toast } from "sonner";
+import { useSourceFileActions } from "@/hooks/useSourceFileActions";
 import { useJobStore } from "@/stores/jobStore";
 import { useWorkspaceStore } from "@/stores/workspaceStore";
 import { pickOutputPath } from "@/lib/media-client";
@@ -28,6 +30,7 @@ const normalizeQualityValue = (value: number | readonly number[]) => {
 export function Compress() {
   const activeFile = useWorkspaceStore((state) => state.activeFile);
   const { jobs, enqueueJob, startJob, cancelJob } = useJobStore();
+  const { openSourceFile } = useSourceFileActions();
   const [quality, setQuality] = useState(70);
   const [outputPath, setOutputPath] = useState("");
 
@@ -113,14 +116,15 @@ export function Compress() {
         <p className="text-muted-foreground">Reduce file size while preserving as much quality as possible.</p>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Source File</CardTitle>
-          <CardDescription>
-            {activeFile ? activeFile.name : "Select a file from the Dashboard"}
-          </CardDescription>
-        </CardHeader>
-      </Card>
+      <SourceWorkspaceCard
+        activeFile={activeFile}
+        onOpenSource={() => {
+          void openSourceFile().catch((error) => {
+            toast.error(error instanceof Error ? error.message : "Failed to open the file picker.");
+          });
+        }}
+        title="Source file"
+      />
 
       <Card>
         <CardHeader>

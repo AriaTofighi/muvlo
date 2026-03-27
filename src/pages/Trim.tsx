@@ -3,8 +3,10 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Slider } from "@/components/ui/slider";
+import { SourceWorkspaceCard } from "@/components/workspace/SourceWorkspaceCard";
 import { Scissors, Save } from "lucide-react";
 import { toast } from "sonner";
+import { useSourceFileActions } from "@/hooks/useSourceFileActions";
 import { useJobStore } from "@/stores/jobStore";
 import { useWorkspaceStore } from "@/stores/workspaceStore";
 import { pickOutputPath } from "@/lib/media-client";
@@ -14,6 +16,7 @@ import type { MediaJobRequest } from "@/lib/media-types";
 export function Trim() {
   const activeFile = useWorkspaceStore((state) => state.activeFile);
   const { jobs, enqueueJob, startJob } = useJobStore();
+  const { openSourceFile } = useSourceFileActions();
   const [range, setRange] = useState([0, 100]);
   const [outputPath, setOutputPath] = useState("");
 
@@ -96,14 +99,15 @@ export function Trim() {
         <p className="text-muted-foreground">Cut the start and end of your clip into a new export.</p>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Source Media</CardTitle>
-          <CardDescription>
-            {activeFile ? activeFile.name : "Select a file from the Dashboard"}
-          </CardDescription>
-        </CardHeader>
-      </Card>
+      <SourceWorkspaceCard
+        activeFile={activeFile}
+        onOpenSource={() => {
+          void openSourceFile().catch((error) => {
+            toast.error(error instanceof Error ? error.message : "Failed to open the file picker.");
+          });
+        }}
+        emptyDescription="Open a clip here and the timeline will stay in place while you move through the rest of the app."
+      />
 
       <Card>
         <CardHeader>

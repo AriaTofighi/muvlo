@@ -67,7 +67,7 @@ export function FileDropZone({
   return (
     <div
       className={cn(
-        "relative flex w-full cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed border-border bg-muted/30 p-12 text-center transition-colors hover:bg-muted/50",
+        "group relative flex w-full cursor-pointer flex-col items-center justify-center rounded-[1.6rem] border border-dashed border-border/80 bg-muted/24 p-12 text-center transition-all hover:border-accent/35 hover:bg-muted/36",
         isDragging && "border-accent bg-accent/10",
         className
       )}
@@ -86,13 +86,13 @@ export function FileDropZone({
       <div className="flex flex-col items-center gap-4 text-muted-foreground">
         <UploadCloud
           className={cn(
-            "h-12 w-12 transition-colors",
+            "h-12 w-12 transition-colors group-hover:text-accent",
             isDragging && "text-accent"
           )}
         />
-        <p className="font-medium text-foreground">{label}</p>
-        <p className="text-sm">{hint}</p>
-        <Button type="button" variant="secondary" className="pointer-events-none">
+        <p className="max-w-xl font-medium text-foreground">{label}</p>
+        <p className="max-w-xl text-sm leading-6">{hint}</p>
+        <Button type="button" variant="secondary" className="pointer-events-none rounded-xl">
           {browseLabel}
         </Button>
       </div>

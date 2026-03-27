@@ -1,10 +1,12 @@
 import { useEffect, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { FormatPicker } from "@/components/FormatPicker";
+import { SourceWorkspaceCard } from "@/components/workspace/SourceWorkspaceCard";
 import { Play, Save } from "lucide-react";
 import { toast } from "sonner";
+import { useSourceFileActions } from "@/hooks/useSourceFileActions";
 import { useJobStore } from "@/stores/jobStore";
 import { useWorkspaceStore } from "@/stores/workspaceStore";
 import { pickOutputPath } from "@/lib/media-client";
@@ -14,6 +16,7 @@ import type { MediaJobRequest } from "@/lib/media-types";
 export function ExtractAudio() {
   const activeFile = useWorkspaceStore((state) => state.activeFile);
   const { jobs, enqueueJob, startJob } = useJobStore();
+  const { openSourceFile } = useSourceFileActions();
   const [format, setFormat] = useState("mp3");
   const [outputPath, setOutputPath] = useState("");
 
@@ -91,27 +94,14 @@ export function ExtractAudio() {
         <p className="text-muted-foreground">Pull the audio track from a video and save it as a separate file.</p>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Source Media</CardTitle>
-          <CardDescription>
-            {activeFile ? activeFile.name : "Select a file from the Dashboard"}
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="h-24 w-full rounded-md border bg-muted/50 flex items-center justify-center relative overflow-hidden">
-            <div className="flex items-end gap-1 h-12 opacity-60">
-              {Array.from({ length: 40 }).map((_, index) => (
-                <div
-                  key={index}
-                  className="w-1 rounded-full bg-accent animate-pulse"
-                  style={{ height: `${20 + ((index * 13) % 70)}%`, animationDelay: `${index * 0.05}s` }}
-                />
-              ))}
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+      <SourceWorkspaceCard
+        activeFile={activeFile}
+        onOpenSource={() => {
+          void openSourceFile().catch((error) => {
+            toast.error(error instanceof Error ? error.message : "Failed to open the file picker.");
+          });
+        }}
+      />
 
       <Card>
         <CardHeader>
