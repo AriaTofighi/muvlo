@@ -55,11 +55,7 @@ export function Home() {
   ];
 
   return (
-    <div className="mx-auto max-w-4xl space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-500">
-      <div className="space-y-2 text-center">
-        <h2 className="text-4xl font-bold tracking-tight">Welcome to Muvlo</h2>
-      </div>
-
+    <div className="mx-auto max-w-4xl space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
       {!tauriReady && (
         <Card className="border-destructive/50 bg-destructive/5">
           <CardHeader>
