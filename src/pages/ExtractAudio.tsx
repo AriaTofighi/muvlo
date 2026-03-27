@@ -4,7 +4,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { FormatPicker } from "@/components/FormatPicker";
 import { SourceWorkspaceCard } from "@/components/workspace/SourceWorkspaceCard";
-import { Folder, Play, Save } from "lucide-react";
+import { Progress } from "@/components/ui/progress";
+import { Folder, Play, Save, Square } from "lucide-react";
 import { toast } from "sonner";
 import { useSourceFileActions } from "@/hooks/useSourceFileActions";
 import { useJobStore } from "@/stores/jobStore";
@@ -91,6 +92,15 @@ export function ExtractAudio() {
     toast.success(`Started audio extraction to .${format}`);
   };
 
+  const cancelExtraction = async () => {
+    if (!currentJob) {
+      return;
+    }
+
+    await useJobStore.getState().cancelJob(currentJob.id);
+    toast("Extraction cancelled");
+  };
+
   return (
     <div className="mx-auto max-w-3xl space-y-8 animate-in fade-in duration-500">
       <div>
@@ -127,7 +137,22 @@ export function ExtractAudio() {
         </CardContent>
       </Card>
 
-      {currentJob?.status === "completed" && (
+      {currentJob?.status === "running" ? (
+        <Card className="border-accent">
+          <CardContent className="pt-6 space-y-4">
+            <div className="flex justify-between text-sm">
+              <span>{currentJob.phase ?? "Extracting"}...</span>
+              <span className="font-mono">{Math.round(currentJob.progress)}%</span>
+            </div>
+            <Progress value={currentJob.progress} className="h-2" />
+            <div className="flex justify-end">
+              <Button variant="destructive" onClick={() => void cancelExtraction()}>
+                <Square className="mr-2 h-4 w-4" /> Cancel
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      ) : currentJob?.status === "completed" ? (
         <Card className="border-green-500/40">
           <CardContent className="pt-6">
             <div className="flex items-center justify-between gap-4">
@@ -146,7 +171,7 @@ export function ExtractAudio() {
             </div>
           </CardContent>
         </Card>
-      )}
+      ) : null}
 
       <div className="flex justify-end">
         <Button size="lg" disabled={!activeFile || !outputPath} onClick={() => void startExtraction()}>

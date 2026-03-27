@@ -4,7 +4,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Slider } from "@/components/ui/slider";
 import { SourceWorkspaceCard } from "@/components/workspace/SourceWorkspaceCard";
-import { Folder, Scissors, Save } from "lucide-react";
+import { Progress } from "@/components/ui/progress";
+import { Folder, Scissors, Save, Square } from "lucide-react";
 import { toast } from "sonner";
 import { useSourceFileActions } from "@/hooks/useSourceFileActions";
 import { useJobStore } from "@/stores/jobStore";
@@ -96,6 +97,15 @@ export function Trim() {
     toast.success(`Started trim from ${formatDuration(startSeconds)} to ${formatDuration(endSeconds)}`);
   };
 
+  const cancelTrim = async () => {
+    if (!currentJob) {
+      return;
+    }
+
+    await useJobStore.getState().cancelJob(currentJob.id);
+    toast("Trim cancelled");
+  };
+
   return (
     <div className="mx-auto max-w-3xl space-y-8 animate-in fade-in duration-500">
       <div>
@@ -154,7 +164,22 @@ export function Trim() {
         </CardContent>
       </Card>
 
-      {currentJob?.status === "completed" && (
+      {currentJob?.status === "running" ? (
+        <Card className="border-accent">
+          <CardContent className="pt-6 space-y-4">
+            <div className="flex justify-between text-sm">
+              <span>{currentJob.phase ?? "Trimming"}...</span>
+              <span className="font-mono">{Math.round(currentJob.progress)}%</span>
+            </div>
+            <Progress value={currentJob.progress} className="h-2" />
+            <div className="flex justify-end">
+              <Button variant="destructive" onClick={() => void cancelTrim()}>
+                <Square className="mr-2 h-4 w-4" /> Cancel
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      ) : currentJob?.status === "completed" ? (
         <Card className="border-green-500/40">
           <CardContent className="pt-6">
             <div className="flex items-center justify-between gap-4">
@@ -173,7 +198,7 @@ export function Trim() {
             </div>
           </CardContent>
         </Card>
-      )}
+      ) : null}
 
       {currentJob?.status === "failed" && (
         <Card className="border-destructive/40">

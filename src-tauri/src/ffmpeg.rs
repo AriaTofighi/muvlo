@@ -368,7 +368,7 @@ async fn execute_media_job(
     emit_progress(
         &app,
         &job_id,
-        Some("starting"),
+        Some("Starting"),
         None,
         None,
         None,
@@ -410,7 +410,7 @@ async fn execute_media_job(
                             emit_progress(
                                 &app,
                                 &job_id,
-                                Some("running"),
+                                Some("Processing"),
                                 progress.progress_percent,
                                 progress.time_seconds,
                                 progress.fps,
