@@ -16,8 +16,8 @@ import { toast } from "sonner";
 import { useEffect } from "react";
 
 export function SettingsPanel() {
-  const { 
-    ffmpegPath, setFfmpegPath, 
+  const {
+    ffmpegPath, setFfmpegPath,
     outputDirectory, setOutputDirectory,
     theme, setTheme
   } = useSettingsStore();
@@ -45,9 +45,7 @@ export function SettingsPanel() {
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>Settings</DialogTitle>
-          <DialogDescription>
-            Configure Muvlo preferences and ffmpeg system paths.
-          </DialogDescription>
+
         </DialogHeader>
         <div className="space-y-6 py-4">
           <div className="space-y-2">
@@ -60,7 +58,7 @@ export function SettingsPanel() {
             />
             <p className="text-xs text-muted-foreground">Keep "bundled" to use the internal FFmpeg included with Muvlo.</p>
           </div>
-          
+
           <div className="space-y-2">
             <Label htmlFor="output-dir">Default Output Directory</Label>
             <div className="flex gap-2">
@@ -73,7 +71,7 @@ export function SettingsPanel() {
               <Button variant="secondary">Browse</Button>
             </div>
           </div>
-          
+
           <div className="space-y-2">
             <Label>Appearance</Label>
             <Select value={theme} onValueChange={(val: any) => val && setTheme(val)}>
