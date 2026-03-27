@@ -42,11 +42,32 @@ export const getBaseName = (fileName: string) => {
   return segments.join(".");
 };
 
+export const getDirectory = (path: string) => {
+  const lastSlash = Math.max(path.lastIndexOf("/"), path.lastIndexOf("\\"));
+  if (lastSlash === -1) return "";
+  return path.substring(0, lastSlash);
+};
+
+export const getPathSeparator = (path: string) => {
+  return path.includes("\\") ? "\\" : "/";
+};
+
 export const buildSuggestedOutputName = (
   file: SelectedFile,
   extension: string,
   suffix = "",
 ) => `${getBaseName(file.name)}${suffix}.${getPreferredOutputExtension(extension)}`;
+
+export const buildDefaultOutputPath = (
+  file: SelectedFile,
+  extension: string,
+  suffix = "",
+) => {
+  const dir = getDirectory(file.path);
+  const sep = getPathSeparator(file.path);
+  const name = buildSuggestedOutputName(file, extension, suffix);
+  return dir ? `${dir}${sep}${name}` : name;
+};
 
 export const getPreferredOutputExtension = (extension: string | null | undefined) => {
   const normalized = extension?.toLowerCase() ?? "";

@@ -5,13 +5,13 @@ import { FileDropZone } from "@/components/FileDropZone";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { SourceWorkspaceCard } from "@/components/workspace/SourceWorkspaceCard";
-import { Type, Play, Save } from "lucide-react";
+import { Folder, Type, Play, Save } from "lucide-react";
 import { toast } from "sonner";
 import { useSourceFileActions } from "@/hooks/useSourceFileActions";
 import { useJobStore } from "@/stores/jobStore";
 import { useWorkspaceStore } from "@/stores/workspaceStore";
-import { pickInputFiles, pickOutputPath } from "@/lib/media-client";
-import { SUBTITLE_FILTERS, buildSuggestedOutputName, normalizeWorkflowOutputPath } from "@/lib/media-helpers";
+import { pickInputFiles, pickOutputPath, revealInExplorer } from "@/lib/media-client";
+import { SUBTITLE_FILTERS, buildDefaultOutputPath, buildSuggestedOutputName, normalizeWorkflowOutputPath } from "@/lib/media-helpers";
 import type { MediaJobRequest } from "@/lib/media-types";
 
 export function Subtitles() {
@@ -25,8 +25,12 @@ export function Subtitles() {
   const [outputPath, setOutputPath] = useState("");
 
   useEffect(() => {
-    setOutputPath("");
-  }, [activeFile?.path, subtitleFile?.path, mode]);
+    if (activeFile) {
+      setOutputPath(buildDefaultOutputPath(activeFile, activeFile.extension ?? "mp4", mode === "soft" ? "-subtitled" : "-burned"));
+    } else {
+      setOutputPath("");
+    }
+  }, [activeFile, subtitleFile?.path, mode]);
 
   const currentJob = useMemo(
     () =>
@@ -177,9 +181,21 @@ export function Subtitles() {
 
       {currentJob?.status === "completed" && (
         <Card className="border-green-500/40">
-          <CardContent className="space-y-2 pt-6">
-            <p className="font-medium">Subtitle job completed</p>
-            <p className="text-sm text-muted-foreground">{currentJob.outputPath ?? outputPath}</p>
+          <CardContent className="pt-6">
+            <div className="flex items-center justify-between gap-4">
+              <div className="min-w-0">
+                <p className="font-medium text-green-600 dark:text-green-400">Subtitle job completed</p>
+                <p className="truncate text-sm text-muted-foreground">{currentJob.outputPath ?? outputPath}</p>
+              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => void revealInExplorer(currentJob.outputPath ?? outputPath)}
+                className="shrink-0 border-green-500/20 hover:border-green-500/40 hover:bg-green-500/5"
+              >
+                <Folder className="mr-2 h-4 w-4" /> Open Folder
+              </Button>
+            </div>
           </CardContent>
         </Card>
       )}

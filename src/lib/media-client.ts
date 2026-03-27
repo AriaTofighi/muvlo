@@ -1,5 +1,6 @@
 import { invoke, isTauri } from "@tauri-apps/api/core";
 import { listen, type UnlistenFn } from "@tauri-apps/api/event";
+import { revealItemInDir } from "@tauri-apps/plugin-opener";
 import type {
   FileDialogFilter,
   JobCompleteEvent,
@@ -223,4 +224,14 @@ export function listenToJobComplete(handler: (event: JobCompleteEvent) => void):
   return listen<JobCompleteEvent>("job-complete", (event) => {
     handler(event.payload);
   });
+}
+
+export async function revealInExplorer(path: string) {
+  ensureTauriRuntime();
+  try {
+    await revealItemInDir(path);
+  } catch (error) {
+    console.error("Failed to reveal item in folder:", error);
+    throw error;
+  }
 }

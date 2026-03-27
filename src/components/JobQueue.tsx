@@ -3,7 +3,8 @@ import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTr
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { cn } from "@/lib/utils";
-import { ListVideo, Play, Trash2, XCircle, CheckCircle2 } from "lucide-react";
+import { ListVideo, Play, Trash2, XCircle, CheckCircle2, Folder } from "lucide-react";
+import { revealInExplorer } from "@/lib/media-client";
 
 export function JobQueue() {
   const { jobs, removeJob, clearCompleted, startJob, startAllIdle, cancelJob } = useJobStore();
@@ -61,7 +62,24 @@ export function JobQueue() {
                         <Play className="h-4 w-4" />
                       </Button>
                     )}
-                    {job.status === "completed" && <CheckCircle2 className="h-5 w-5 text-green-500" />}
+                    {job.status === "completed" && (
+                      <>
+                        <Button
+                          variant="ghost"
+                          size="icon-sm"
+                          onClick={() => {
+                            const path = job.outputPath || ("outputPath" in job.request.payload ? job.request.payload.outputPath : null);
+                            if (path) {
+                              void revealInExplorer(path as string);
+                            }
+                          }}
+                          title="Open folder"
+                        >
+                          <Folder className="h-4 w-4 text-green-500" />
+                        </Button>
+                        <CheckCircle2 className="h-5 w-5 text-green-500" />
+                      </>
+                    )}
                     {["failed", "cancelled"].includes(job.status) && (
                       <XCircle className="h-5 w-5 text-destructive" />
                     )}

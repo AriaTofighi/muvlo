@@ -4,13 +4,13 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { FormatPicker } from "@/components/FormatPicker";
 import { SourceWorkspaceCard } from "@/components/workspace/SourceWorkspaceCard";
-import { Play, Save } from "lucide-react";
+import { Folder, Play, Save } from "lucide-react";
 import { toast } from "sonner";
 import { useSourceFileActions } from "@/hooks/useSourceFileActions";
 import { useJobStore } from "@/stores/jobStore";
 import { useWorkspaceStore } from "@/stores/workspaceStore";
-import { pickOutputPath } from "@/lib/media-client";
-import { buildSuggestedOutputName, normalizeWorkflowOutputPath } from "@/lib/media-helpers";
+import { pickOutputPath, revealInExplorer } from "@/lib/media-client";
+import { buildDefaultOutputPath, buildSuggestedOutputName, normalizeWorkflowOutputPath } from "@/lib/media-helpers";
 import type { MediaJobRequest } from "@/lib/media-types";
 
 export function ExtractAudio() {
@@ -21,8 +21,12 @@ export function ExtractAudio() {
   const [outputPath, setOutputPath] = useState("");
 
   useEffect(() => {
-    setOutputPath("");
-  }, [activeFile?.path, format]);
+    if (activeFile) {
+      setOutputPath(buildDefaultOutputPath(activeFile, format, "-audio"));
+    } else {
+      setOutputPath("");
+    }
+  }, [activeFile, format]);
 
   const currentJob = useMemo(
     () =>
@@ -125,9 +129,21 @@ export function ExtractAudio() {
 
       {currentJob?.status === "completed" && (
         <Card className="border-green-500/40">
-          <CardContent className="space-y-2 pt-6">
-            <p className="font-medium">Audio extraction completed</p>
-            <p className="text-sm text-muted-foreground">{currentJob.outputPath ?? outputPath}</p>
+          <CardContent className="pt-6">
+            <div className="flex items-center justify-between gap-4">
+              <div className="min-w-0">
+                <p className="font-medium text-green-600 dark:text-green-400">Audio extraction completed</p>
+                <p className="truncate text-sm text-muted-foreground">{currentJob.outputPath ?? outputPath}</p>
+              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => void revealInExplorer(currentJob.outputPath ?? outputPath)}
+                className="shrink-0 border-green-500/20 hover:border-green-500/40 hover:bg-green-500/5"
+              >
+                <Folder className="mr-2 h-4 w-4" /> Open Folder
+              </Button>
+            </div>
           </CardContent>
         </Card>
       )}
