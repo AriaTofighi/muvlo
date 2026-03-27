@@ -2,7 +2,6 @@ import { useSettingsStore } from "@/stores/settingsStore";
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
   DialogHeader,
   DialogTitle,
   DialogTrigger,

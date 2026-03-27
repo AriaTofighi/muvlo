@@ -9,6 +9,7 @@ pub fn run() {
             Ok(())
         })
         .manage(ffmpeg::JobRegistry::default())
+        .manage(ffmpeg::MediaToolStatusCache::default())
         .plugin(tauri_plugin_opener::init())
         .invoke_handler(tauri::generate_handler![
             ffmpeg::pick_input_files,

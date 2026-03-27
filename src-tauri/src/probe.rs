@@ -2,6 +2,12 @@ use serde::{Deserialize, Serialize};
 use std::path::Path;
 use tokio::process::Command;
 
+#[cfg(windows)]
+use std::os::windows::process::CommandExt;
+
+#[cfg(windows)]
+const CREATE_NO_WINDOW: u32 = 0x08000000;
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub struct MediaInfo {
@@ -38,16 +44,20 @@ pub async fn get_media_info(path: String) -> Result<MediaInfo, String> {
 
 pub async fn probe_media_info(path: &Path) -> Result<MediaInfo, String> {
     let path_string = path.to_string_lossy().to_string();
-    let output = Command::new(tool_path("MUVLO_FFPROBE_PATH", "ffprobe"))
-        .args([
-            "-v",
-            "quiet",
-            "-print_format",
-            "json",
-            "-show_format",
-            "-show_streams",
-            &path_string,
-        ])
+    let mut command = Command::new(tool_path("MUVLO_FFPROBE_PATH", "ffprobe"));
+    command.args([
+        "-v",
+        "quiet",
+        "-print_format",
+        "json",
+        "-show_format",
+        "-show_streams",
+        &path_string,
+    ]);
+    #[cfg(windows)]
+    command.creation_flags(CREATE_NO_WINDOW);
+
+    let output = command
         .output()
         .await
         .map_err(|e| format!("Failed to execute ffprobe: {e}"))?;
@@ -71,8 +81,12 @@ pub async fn probe_duration_seconds(path: &Path) -> Result<Option<f64>, String> 
 
 #[tauri::command]
 pub async fn get_ffprobe_available() -> Result<bool, String> {
-    let output = Command::new(tool_path("MUVLO_FFPROBE_PATH", "ffprobe"))
-        .arg("-version")
+    let mut command = Command::new(tool_path("MUVLO_FFPROBE_PATH", "ffprobe"));
+    command.arg("-version");
+    #[cfg(windows)]
+    command.creation_flags(CREATE_NO_WINDOW);
+
+    let output = command
         .output()
         .await
         .map_err(|e| format!("Failed to execute ffprobe: {e}"))?;

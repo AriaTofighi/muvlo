@@ -7,7 +7,7 @@ use std::{
     env,
     fs,
     path::{Path, PathBuf},
-    process::Stdio,
+    process::{Command as StdCommand, Stdio},
     sync::{
         atomic::{AtomicBool, Ordering},
         Arc, OnceLock,
@@ -20,10 +20,15 @@ use tokio::{
     sync::{Mutex, Notify},
 };
 
+#[cfg(windows)]
+use std::os::windows::process::CommandExt;
+
 const JOB_PROGRESS_EVENT: &str = "job-progress";
 const JOB_COMPLETE_EVENT: &str = "job-complete";
 const FFMPEG_ENV_NAME: &str = "MUVLO_FFMPEG_PATH";
 const FFPROBE_ENV_NAME: &str = "MUVLO_FFPROBE_PATH";
+#[cfg(windows)]
+const CREATE_NO_WINDOW: u32 = 0x08000000;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -176,6 +181,11 @@ pub struct MediaToolStatus {
     pub ffprobe_version: Option<String>,
 }
 
+#[derive(Default)]
+pub struct MediaToolStatusCache {
+    status: Mutex<Option<MediaToolStatus>>,
+}
+
 #[derive(Clone, Default)]
 pub struct JobRegistry {
     jobs: Arc<Mutex<HashMap<String, Arc<JobControl>>>>,
@@ -304,19 +314,26 @@ pub async fn pick_output_path(suggested_name: Option<String>) -> Result<Option<S
 }
 
 #[tauri::command]
-pub async fn get_media_tool_status() -> Result<MediaToolStatus, String> {
-    let ffmpeg_available = tool_available(FFMPEG_ENV_NAME, "ffmpeg").await;
-    let ffprobe_available = tool_available(FFPROBE_ENV_NAME, "ffprobe").await;
+pub async fn get_media_tool_status(
+    cache: State<'_, MediaToolStatusCache>,
+) -> Result<MediaToolStatus, String> {
+    let mut cached = cache.status.lock().await;
+    if let Some(status) = cached.clone() {
+        return Ok(status);
+    }
 
-    let ffmpeg_version = tool_version(FFMPEG_ENV_NAME, "ffmpeg").await;
-    let ffprobe_version = tool_version(FFPROBE_ENV_NAME, "ffprobe").await;
+    let ffmpeg = inspect_tool(FFMPEG_ENV_NAME, "ffmpeg").await;
+    let ffprobe = inspect_tool(FFPROBE_ENV_NAME, "ffprobe").await;
 
-    Ok(MediaToolStatus {
-        ffmpeg_available,
-        ffprobe_available,
-        ffmpeg_version,
-        ffprobe_version,
-    })
+    let status = MediaToolStatus {
+        ffmpeg_available: ffmpeg.is_some(),
+        ffprobe_available: ffprobe.is_some(),
+        ffmpeg_version: ffmpeg,
+        ffprobe_version: ffprobe,
+    };
+
+    *cached = Some(status.clone());
+    Ok(status)
 }
 
 #[tauri::command]
@@ -419,6 +436,8 @@ async fn execute_media_job(
     command.args(&plan.args);
     command.stderr(Stdio::piped());
     command.stdout(Stdio::null());
+    #[cfg(windows)]
+    command.creation_flags(CREATE_NO_WINDOW);
 
     for cleanup_file in &plan.cleanup_files {
         if let Some(parent) = cleanup_file.parent() {
@@ -823,20 +842,22 @@ fn detect_media_flavor(path: &Path) -> MediaFlavor {
 fn futures_lite_probe(path: &Path) -> Option<bool> {
     let path_string = path.to_string_lossy().to_string();
 
-    if let Ok(output) = std::process::Command::new(tool_path(FFPROBE_ENV_NAME, "ffprobe"))
-        .args([
-            "-v",
-            "quiet",
-            "-select_streams",
-            "v:0",
-            "-show_entries",
-            "stream=index",
-            "-of",
-            "csv=p=0",
-            &path_string,
-        ])
-        .output()
-    {
+    let mut command = StdCommand::new(tool_path(FFPROBE_ENV_NAME, "ffprobe"));
+    command.args([
+        "-v",
+        "quiet",
+        "-select_streams",
+        "v:0",
+        "-show_entries",
+        "stream=index",
+        "-of",
+        "csv=p=0",
+        &path_string,
+    ]);
+    #[cfg(windows)]
+    command.creation_flags(CREATE_NO_WINDOW);
+
+    if let Ok(output) = command.output() {
         if output.status.success() {
             let stdout = String::from_utf8_lossy(&output.stdout);
             return Some(!stdout.trim().is_empty());
@@ -1051,21 +1072,13 @@ fn emit_complete(
     .map_err(|e| format!("Failed to emit job complete event: {e}"))
 }
 
-async fn tool_available(env_name: &str, default: &str) -> bool {
-    Command::new(tool_path(env_name, default))
-        .arg("-version")
-        .output()
-        .await
-        .map(|output| output.status.success())
-        .unwrap_or(false)
-}
+async fn inspect_tool(env_name: &str, default: &str) -> Option<String> {
+    let mut command = Command::new(tool_path(env_name, default));
+    command.arg("-version");
+    #[cfg(windows)]
+    command.creation_flags(CREATE_NO_WINDOW);
 
-async fn tool_version(env_name: &str, default: &str) -> Option<String> {
-    let output = Command::new(tool_path(env_name, default))
-        .arg("-version")
-        .output()
-        .await
-        .ok()?;
+    let output = command.output().await.ok()?;
 
     if !output.status.success() {
         return None;
