@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { FileVideo, Scissors, Minimize, Combine, Music, Type, Trash2, Clock } from "lucide-react";
+import { FileVideo, Scissors, Minimize, Combine, Music, Type, Trash2, Clock, RefreshCw } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { FileDropZone } from "@/components/FileDropZone";
 import { Button } from "@/components/ui/button";
@@ -89,7 +89,10 @@ export function Home() {
                 </div>
               </div>
               <div className="flex items-center gap-2">
-                <Button size="sm" onClick={() => navigate("/convert")} className="h-8">Continue to Convert</Button>
+                <Button variant="outline" size="sm" onClick={() => void handleBrowse()} className="h-8 border-border/50 font-medium text-xs">
+                  <RefreshCw className="mr-2 h-3.5 w-3.5" />
+                  Replace
+                </Button>
                 <Button variant="ghost" size="icon" onClick={clearActiveFile} className="h-8 w-8 text-muted-foreground hover:text-destructive hover:bg-destructive/5 transition-colors">
                   <Trash2 className="h-4 w-4" />
                 </Button>
