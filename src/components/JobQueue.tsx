@@ -19,7 +19,7 @@ export function JobQueue() {
         )}
       </SheetTrigger>
       <SheetContent side="bottom" className="h-[400px] sm:h-[500px]">
-        <SheetHeader className="mb-4 flex flex-row items-center justify-between">
+        <SheetHeader className="mb-4 flex flex-row items-center justify-between pr-14">
           <div>
             <SheetTitle>Job Queue</SheetTitle>
             <SheetDescription>Manage background conversion and processing tasks.</SheetDescription>
@@ -70,7 +70,7 @@ export function JobQueue() {
                         <XCircle className="h-4 w-4 text-destructive" />
                       </Button>
                     )}
-                    
+
                     <Button variant="ghost" size="icon-sm" onClick={() => removeJob(job.id)}>
                       <Trash2 className="h-4 w-4 text-destructive" />
                     </Button>
