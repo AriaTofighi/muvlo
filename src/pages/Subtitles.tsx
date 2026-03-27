@@ -9,7 +9,7 @@ import { toast } from "sonner";
 import { useJobStore } from "@/stores/jobStore";
 import { useWorkspaceStore } from "@/stores/workspaceStore";
 import { pickInputFiles, pickOutputPath } from "@/lib/media-client";
-import { SUBTITLE_FILTERS, buildSuggestedOutputName } from "@/lib/media-helpers";
+import { SUBTITLE_FILTERS, buildSuggestedOutputName, normalizeWorkflowOutputPath } from "@/lib/media-helpers";
 import type { MediaJobRequest } from "@/lib/media-types";
 
 export function Subtitles() {
@@ -73,13 +73,19 @@ export function Subtitles() {
       return;
     }
 
+    const normalizedOutput = normalizeWorkflowOutputPath(outputPath);
+    if (normalizedOutput.changed) {
+      setOutputPath(normalizedOutput.path);
+      toast(normalizedOutput.message);
+    }
+
     const request: MediaJobRequest = {
       jobId: crypto.randomUUID(),
       payload: {
         kind: "subtitles",
         inputPath: activeFile.path,
         subtitlePath: subtitleFile.path,
-        outputPath,
+        outputPath: normalizedOutput.path,
         mode: mode === "hard" ? "hard" : "soft",
         overwrite: true,
       },

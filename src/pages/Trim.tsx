@@ -8,7 +8,7 @@ import { toast } from "sonner";
 import { useJobStore } from "@/stores/jobStore";
 import { useWorkspaceStore } from "@/stores/workspaceStore";
 import { pickOutputPath } from "@/lib/media-client";
-import { buildSuggestedOutputName, formatDuration, getMediaDurationSeconds } from "@/lib/media-helpers";
+import { buildSuggestedOutputName, formatDuration, getMediaDurationSeconds, normalizeWorkflowOutputPath } from "@/lib/media-helpers";
 import type { MediaJobRequest } from "@/lib/media-types";
 
 export function Trim() {
@@ -60,12 +60,18 @@ export function Trim() {
       return;
     }
 
+    const normalizedOutput = normalizeWorkflowOutputPath(outputPath);
+    if (normalizedOutput.changed) {
+      setOutputPath(normalizedOutput.path);
+      toast(normalizedOutput.message);
+    }
+
     const request: MediaJobRequest = {
       jobId: crypto.randomUUID(),
       payload: {
         kind: "trim",
         inputPath: activeFile.path,
-        outputPath,
+        outputPath: normalizedOutput.path,
         startSeconds,
         endSeconds,
         overwrite: true,
@@ -147,6 +153,15 @@ export function Trim() {
           <CardContent className="space-y-2 pt-6">
             <p className="font-medium">Trim completed</p>
             <p className="text-sm text-muted-foreground">{currentJob.outputPath ?? outputPath}</p>
+          </CardContent>
+        </Card>
+      )}
+
+      {currentJob?.status === "failed" && (
+        <Card className="border-destructive/40">
+          <CardContent className="space-y-2 pt-6">
+            <p className="font-medium">Trim failed</p>
+            <p className="text-sm text-destructive">{currentJob.error ?? "Unknown FFmpeg error."}</p>
           </CardContent>
         </Card>
       )}

@@ -9,7 +9,7 @@ import { toast } from "sonner";
 import { useJobStore } from "@/stores/jobStore";
 import { useWorkspaceStore } from "@/stores/workspaceStore";
 import { pickOutputPath } from "@/lib/media-client";
-import { buildSuggestedOutputName } from "@/lib/media-helpers";
+import { buildSuggestedOutputName, normalizeWorkflowOutputPath } from "@/lib/media-helpers";
 import type { MediaJobRequest } from "@/lib/media-types";
 
 const qualityToCrf = (quality: number) => {
@@ -46,12 +46,18 @@ export function Compress() {
       return;
     }
 
+    const normalizedOutput = normalizeWorkflowOutputPath(outputPath);
+    if (normalizedOutput.changed) {
+      setOutputPath(normalizedOutput.path);
+      toast(normalizedOutput.message);
+    }
+
     const request: MediaJobRequest = {
       jobId: crypto.randomUUID(),
       payload: {
         kind: "compress",
         inputPath: activeFile.path,
-        outputPath,
+        outputPath: normalizedOutput.path,
         quality: quality[0],
         overwrite: true,
       },

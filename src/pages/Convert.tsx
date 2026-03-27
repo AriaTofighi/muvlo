@@ -9,7 +9,7 @@ import { toast } from "sonner";
 import { useJobStore } from "@/stores/jobStore";
 import { useWorkspaceStore } from "@/stores/workspaceStore";
 import { pickOutputPath } from "@/lib/media-client";
-import { buildSuggestedOutputName, formatDuration, formatFileSize, getMediaDurationSeconds } from "@/lib/media-helpers";
+import { buildSuggestedOutputName, formatDuration, formatFileSize, getMediaDurationSeconds, normalizeWorkflowOutputPath } from "@/lib/media-helpers";
 import type { MediaJobRequest } from "@/lib/media-types";
 
 export function Convert() {
@@ -60,12 +60,18 @@ export function Convert() {
       return;
     }
 
+    const normalizedOutput = normalizeWorkflowOutputPath(outputPath);
+    if (normalizedOutput.changed) {
+      setOutputPath(normalizedOutput.path);
+      toast(normalizedOutput.message);
+    }
+
     const request: MediaJobRequest = {
       jobId: crypto.randomUUID(),
       payload: {
         kind: "convert",
         inputPath: activeFile.path,
-        outputPath,
+        outputPath: normalizedOutput.path,
         format,
         overwrite: true,
       },

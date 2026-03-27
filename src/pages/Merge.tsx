@@ -8,7 +8,7 @@ import { toast } from "sonner";
 import { useJobStore } from "@/stores/jobStore";
 import { useWorkspaceStore } from "@/stores/workspaceStore";
 import { pickInputFiles, pickOutputPath } from "@/lib/media-client";
-import { MEDIA_FILTERS, buildSuggestedOutputName } from "@/lib/media-helpers";
+import { MEDIA_FILTERS, buildSuggestedOutputName, normalizeWorkflowOutputPath } from "@/lib/media-helpers";
 import type { MediaJobRequest } from "@/lib/media-types";
 
 export function Merge() {
@@ -68,12 +68,18 @@ export function Merge() {
       return;
     }
 
+    const normalizedOutput = normalizeWorkflowOutputPath(outputPath);
+    if (normalizedOutput.changed) {
+      setOutputPath(normalizedOutput.path);
+      toast(normalizedOutput.message);
+    }
+
     const request: MediaJobRequest = {
       jobId: crypto.randomUUID(),
       payload: {
         kind: "merge",
         inputPaths: files.map((file) => file.path),
-        outputPath,
+        outputPath: normalizedOutput.path,
         overwrite: true,
       },
     };

@@ -46,7 +46,43 @@ export const buildSuggestedOutputName = (
   file: SelectedFile,
   extension: string,
   suffix = "",
-) => `${getBaseName(file.name)}${suffix}.${extension}`;
+) => `${getBaseName(file.name)}${suffix}.${getPreferredOutputExtension(extension)}`;
+
+export const getPreferredOutputExtension = (extension: string | null | undefined) => {
+  const normalized = extension?.toLowerCase() ?? "";
+
+  if (normalized === "mpg4") {
+    return "mp4";
+  }
+
+  return normalized || "mp4";
+};
+
+export const normalizeOutputPath = (outputPath: string) => {
+  if (outputPath.toLowerCase().endsWith(".mpg4")) {
+    return `${outputPath.slice(0, -5)}.mp4`;
+  }
+
+  return outputPath;
+};
+
+export const normalizeWorkflowOutputPath = (outputPath: string) => {
+  const normalizedPath = normalizeOutputPath(outputPath);
+
+  if (normalizedPath !== outputPath) {
+    return {
+      path: normalizedPath,
+      changed: true,
+      message: "Using `.mp4` because `.mpg4` is not a valid FFmpeg output container.",
+    };
+  }
+
+  return {
+    path: outputPath,
+    changed: false,
+    message: null,
+  };
+};
 
 export const getMediaDurationSeconds = (mediaInfo?: MediaInfo | null) => {
   const durationString = mediaInfo?.format.duration;

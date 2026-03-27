@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import { hasTauriRuntime, listenToJobComplete, listenToJobProgress } from "@/lib/media-client";
 import { useJobStore } from "@/stores/jobStore";
+import { toast } from "sonner";
 
 export function useJobEvents() {
   const applyProgress = useJobStore((state) => state.applyProgressEvent);
@@ -16,7 +17,13 @@ export function useJobEvents() {
 
     const setup = async () => {
       unlistenProgress = await listenToJobProgress(applyProgress);
-      unlistenComplete = await listenToJobComplete(applyCompletion);
+      unlistenComplete = await listenToJobComplete((event) => {
+        applyCompletion(event);
+
+        if (!event.success) {
+          toast.error(event.error ?? "Job failed.");
+        }
+      });
     };
 
     void setup();
