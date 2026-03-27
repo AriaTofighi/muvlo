@@ -110,10 +110,9 @@ export function Compress() {
   };
 
   return (
-    <div className="mx-auto max-w-3xl space-y-6 animate-in fade-in duration-500">
+    <div className="mx-auto max-w-3xl space-y-8 animate-in fade-in duration-500">
       <div>
         <h2 className="text-3xl font-bold tracking-tight">Compress Media</h2>
-        <p className="text-muted-foreground">Reduce file size while preserving as much quality as possible.</p>
       </div>
 
       <SourceWorkspaceCard

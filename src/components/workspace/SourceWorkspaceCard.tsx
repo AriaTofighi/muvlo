@@ -37,7 +37,7 @@ export function SourceWorkspaceCard({
   activeFile,
   onOpenSource,
   title = "Source media",
-  description = "Open or replace the file used by this workflow.",
+  description,
   emptyTitle = "No source selected yet",
   emptyDescription = "Open a source file and keep working in this workflow.",
   replaceLabel = "Replace source",
@@ -51,9 +51,9 @@ export function SourceWorkspaceCard({
     <Card className="border-border/60">
       <CardHeader>
         <CardTitle>{title}</CardTitle>
-        <CardDescription>{description}</CardDescription>
+        {description && <CardDescription>{description}</CardDescription>}
       </CardHeader>
-      <CardContent className="p-5">
+      <CardContent className="p-5 pt-0">
         {activeFile ? (
           <div className="space-y-4">
             <div className="flex flex-col gap-4 rounded-xl border border-border/60 bg-muted/30 p-4 sm:flex-row sm:items-start sm:justify-between">

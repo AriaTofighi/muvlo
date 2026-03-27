@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { FileDropZone } from "@/components/FileDropZone";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -106,10 +106,9 @@ export function Subtitles() {
   };
 
   return (
-    <div className="mx-auto max-w-3xl space-y-6 animate-in fade-in duration-500">
+    <div className="mx-auto max-w-3xl space-y-8 animate-in fade-in duration-500">
       <div>
         <h2 className="text-3xl font-bold tracking-tight">Add Subtitles</h2>
-        <p className="text-muted-foreground">Mux subtitles as a selectable track or burn them into the video.</p>
       </div>
 
       <SourceWorkspaceCard
@@ -126,7 +125,6 @@ export function Subtitles() {
       <Card>
         <CardHeader>
           <CardTitle>Subtitle File</CardTitle>
-          <CardDescription>Requires .srt, .vtt, or .ass.</CardDescription>
         </CardHeader>
         <CardContent>
           {subtitleFile ? (

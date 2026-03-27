@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Slider } from "@/components/ui/slider";
 import { SourceWorkspaceCard } from "@/components/workspace/SourceWorkspaceCard";
@@ -93,10 +93,9 @@ export function Trim() {
   };
 
   return (
-    <div className="mx-auto max-w-3xl space-y-6 animate-in fade-in duration-500">
+    <div className="mx-auto max-w-3xl space-y-8 animate-in fade-in duration-500">
       <div>
         <h2 className="text-3xl font-bold tracking-tight">Trim Video</h2>
-        <p className="text-muted-foreground">Cut the start and end of your clip into a new export.</p>
       </div>
 
       <SourceWorkspaceCard
@@ -112,7 +111,6 @@ export function Trim() {
       <Card>
         <CardHeader>
           <CardTitle>Timeline</CardTitle>
-          <CardDescription>Drag handles to set the start and end points.</CardDescription>
         </CardHeader>
         <CardContent className="space-y-6 pt-6">
           <div className="h-24 w-full rounded-md border bg-muted relative overflow-hidden">

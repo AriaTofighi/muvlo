@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
 import { FormatPicker } from "@/components/FormatPicker";
@@ -101,10 +101,9 @@ export function Convert() {
   };
 
   return (
-    <div className="mx-auto max-w-3xl space-y-6 animate-in fade-in duration-500">
+    <div className="mx-auto max-w-3xl space-y-8 animate-in fade-in duration-500">
       <div>
         <h2 className="text-3xl font-bold tracking-tight">Convert Media</h2>
-        <p className="text-muted-foreground">Transcode your source into a different container format.</p>
       </div>
 
       <SourceWorkspaceCard
@@ -119,7 +118,6 @@ export function Convert() {
       <Card>
         <CardHeader>
           <CardTitle>Target Settings</CardTitle>
-          <CardDescription>Choose the container and save destination.</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid gap-2">

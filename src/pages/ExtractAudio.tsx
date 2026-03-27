@@ -88,10 +88,9 @@ export function ExtractAudio() {
   };
 
   return (
-    <div className="mx-auto max-w-3xl space-y-6 animate-in fade-in duration-500">
+    <div className="mx-auto max-w-3xl space-y-8 animate-in fade-in duration-500">
       <div>
         <h2 className="text-3xl font-bold tracking-tight">Extract Audio</h2>
-        <p className="text-muted-foreground">Pull the audio track from a video and save it as a separate file.</p>
       </div>
 
       <SourceWorkspaceCard

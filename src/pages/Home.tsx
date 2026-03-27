@@ -43,10 +43,9 @@ export function Home() {
   ];
 
   return (
-    <div className="mx-auto max-w-4xl space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+    <div className="mx-auto max-w-4xl space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-500">
       <div className="space-y-2 text-center">
         <h2 className="text-4xl font-bold tracking-tight">Welcome to Muvlo</h2>
-        <p className="text-lg text-muted-foreground">Choose a source file to begin.</p>
       </div>
 
       {!tauriReady && (
@@ -64,7 +63,6 @@ export function Home() {
       <Card className="border-border/60">
         <CardHeader>
           <CardTitle>Source File</CardTitle>
-          <CardDescription>{activeFile ? activeFile.name : "Open a source file to begin."}</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <FileDropZone

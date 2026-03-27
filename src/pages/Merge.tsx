@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { FileDropZone } from "@/components/FileDropZone";
 import { Input } from "@/components/ui/input";
 import { Combine, GripVertical, Plus, Save, Trash2 } from "lucide-react";
@@ -96,16 +96,14 @@ export function Merge() {
   };
 
   return (
-    <div className="mx-auto max-w-3xl space-y-6 animate-in fade-in duration-500">
+    <div className="mx-auto max-w-3xl space-y-8 animate-in fade-in duration-500">
       <div>
         <h2 className="text-3xl font-bold tracking-tight">Merge Media</h2>
-        <p className="text-muted-foreground">Join multiple clips or audio files into a single sequential export.</p>
       </div>
 
       <Card>
         <CardHeader>
           <CardTitle>Files to Merge</CardTitle>
-          <CardDescription>Add files, then export them in the current order.</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           {activeFile && (
