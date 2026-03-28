@@ -131,7 +131,7 @@ export function ExtractAudio() {
 
       <Card>
         <CardHeader>
-          <CardTitle>Target Settings</CardTitle>
+          <CardTitle>Target settings</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid gap-2">

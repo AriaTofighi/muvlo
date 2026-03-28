@@ -1,4 +1,4 @@
-import { Button, buttonVariants } from "@/components/ui/button";
+import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import {
   Sheet,
@@ -8,37 +8,30 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import { revealInExplorer } from "@/lib/media-client";
-import { cn } from "@/lib/utils";
 import { useJobStore } from "@/stores/jobStore";
-import {
-  CheckCircle2,
-  Folder,
-  ListVideo,
-  Loader2,
-  Play,
-  Trash2,
-  XCircle,
-} from "lucide-react";
+import { SidebarMenuButton, useSidebar } from "@/components/ui/sidebar";
+import { ListVideo, CheckCircle2, Folder, Loader2, Play, Trash2, XCircle } from "lucide-react";
 
 export function JobQueue() {
-  const { jobs, removeJob, clearCompleted, startJob, startAllIdle, cancelJob } =
-    useJobStore();
+  const { jobs, clearCompleted, startAllIdle, startJob, cancelJob, removeJob } = useJobStore();
+  const { state } = useSidebar();
+  const collapsed = state === "collapsed";
 
   return (
     <Sheet>
       <SheetTrigger
-        className={cn(
-          buttonVariants({ variant: "outline", size: "icon" }),
-          "relative",
-        )}
-      >
-        <ListVideo className="h-5 w-5 text-muted-foreground transition-colors hover:text-foreground" />
-        {jobs.length > 0 && (
-          <span className="absolute -right-1.5 -top-1.5 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-[9px] font-bold text-primary-foreground shadow-sm">
-            {jobs.length}
-          </span>
-        )}
-      </SheetTrigger>
+        render={
+          <SidebarMenuButton tooltip="Job Queue" className="relative group/job-queue">
+            <ListVideo className="h-4 w-4" />
+            {!collapsed && <span>Job Queue</span>}
+            {jobs.length > 0 && (
+              <span className={collapsed ? "absolute -top-1 -right-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-1 text-[9px] font-bold text-primary-foreground shadow-sm" : "absolute right-2 flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-1 text-[9px] font-bold text-primary-foreground shadow-sm"}>
+                {jobs.length}
+              </span>
+            )}
+          </SidebarMenuButton>
+        }
+      />
       <SheetContent
         side="bottom"
         className="flex flex-col overflow-hidden pb-6"
@@ -74,7 +67,7 @@ export function JobQueue() {
         <div className="max-h-[min(56dvh,36rem)] overflow-y-auto px-4">
           <div className="space-y-3 pb-1">
             {jobs.length === 0 ? (
-              <div className="flex flex-col gap-3 rounded-xl border border-border/60 bg-card/60 p-4 shadow-sm">
+              <div className="flex flex-col gap-3 rounded-xl bg-card/60 p-4">
                 <div className="relative">
                   <div
                     aria-hidden="true"
@@ -96,7 +89,7 @@ export function JobQueue() {
               jobs.map((job) => (
                 <div
                   key={job.id}
-                  className="flex flex-col gap-3 rounded-xl border border-border/60 bg-card/60 p-4 shadow-sm transition-all hover:bg-card/80 hover:shadow-md"
+                  className="flex flex-col gap-3 rounded-xl bg-card/60 p-4 transition-all hover:bg-card/80"
                 >
                   <div className="flex items-center justify-between gap-4">
                     <div className="flex flex-col gap-1.5 overflow-hidden">

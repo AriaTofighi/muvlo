@@ -59,7 +59,7 @@ export function Home() {
       {!tauriReady && (
         <Card className="border-destructive/50 bg-destructive/5">
           <CardHeader>
-            <CardTitle>Tauri Runtime Not Detected</CardTitle>
+            <CardTitle>Tauri runtime not detected</CardTitle>
             <CardDescription>
               This screen is running in a plain browser session, so native file dialogs and FFmpeg commands are unavailable.
               Start Muvlo with <code>npm run tauri dev</code>.
@@ -68,15 +68,15 @@ export function Home() {
         </Card>
       )}
 
-      <Card className="border-border/60">
+      <Card>
         <CardHeader>
-          <CardTitle>Source File</CardTitle>
+          <CardTitle>Source media</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           {activeFile ? (
-            <div className="flex items-center justify-between p-4 border rounded-xl bg-muted/20">
+            <div className="flex items-center justify-between rounded-xl bg-muted/20 p-4">
               <div className="flex items-center gap-4 min-w-0">
-                <div className="flex shrink-0 items-center justify-center p-2.5 rounded-lg border bg-background">
+                <div className="flex shrink-0 items-center justify-center rounded-lg bg-background/80 p-2.5">
                   <FileVideo className="h-4 w-4 text-muted-foreground" />
                 </div>
                 <div className="min-w-0">
@@ -111,7 +111,7 @@ export function Home() {
       </Card>
 
       {recentFiles.length > 0 && (
-        <Card className="border-border/60">
+        <Card>
           <CardHeader>
             <CardTitle className="text-sm font-semibold flex items-center gap-2">
               <Clock className="h-4 w-4" />
@@ -142,7 +142,7 @@ export function Home() {
       <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {workflows.map((workflow) => (
           <Link key={workflow.path} to={workflow.path}>
-            <Card className="h-full border-border/60 transition hover:border-accent/40 hover:bg-accent/5 group">
+            <Card className="h-full transition hover:border-accent/40 hover:bg-accent/5 group">
               <CardHeader>
                 <workflow.icon className="mb-2 h-6 w-6 text-muted-foreground group-hover:text-accent transition-colors" />
                 <CardTitle className="group-hover:text-accent transition-colors">{workflow.title}</CardTitle>
@@ -156,7 +156,7 @@ export function Home() {
       {toolStatus && (!toolStatus.ffmpegAvailable || !toolStatus.ffprobeAvailable) && (
         <Card className="border-destructive/50 bg-destructive/5">
           <CardHeader>
-            <CardTitle>FFmpeg Tools Not Ready</CardTitle>
+            <CardTitle>FFmpeg tools not ready</CardTitle>
             <CardDescription>
               Muvlo needs both `ffmpeg` and `ffprobe` on your system path before jobs can run.
             </CardDescription>

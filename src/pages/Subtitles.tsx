@@ -161,12 +161,12 @@ export function Subtitles() {
 
       <Card>
         <CardHeader>
-          <CardTitle>Subtitle File</CardTitle>
+          <CardTitle>Subtitle file</CardTitle>
         </CardHeader>
         <CardContent>
           {subtitleFile ? (
-            <div className="flex items-center gap-3 p-4 border rounded-xl bg-muted/20">
-              <div className="flex shrink-0 items-center justify-center p-2 rounded-lg border bg-background">
+            <div className="flex items-center gap-3 rounded-xl bg-muted/20 p-4">
+              <div className="flex shrink-0 items-center justify-center rounded-lg bg-background/80 p-2">
                 <Type className="h-4 w-4 text-muted-foreground" />
               </div>
               <div className="min-w-0 flex-1">
@@ -195,7 +195,7 @@ export function Subtitles() {
 
       <Card>
         <CardHeader>
-          <CardTitle>Adding Method</CardTitle>
+          <CardTitle>Adding method</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <Select value={mode} onValueChange={(value) => value && setMode(value)}>

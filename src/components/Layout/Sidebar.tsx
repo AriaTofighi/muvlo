@@ -10,15 +10,17 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
   SidebarHeader,
+  SidebarSeparator,
+  SidebarTrigger,
+  SidebarRail,
+  useSidebar,
 } from "@/components/ui/sidebar";
-import { LayoutDashboard, FileVideo, Scissors, Minimize, Combine, Music, Type, FolderOpen } from "lucide-react";
+import { 
+  LayoutDashboard, FileVideo, Scissors, Minimize, Combine, Music, Type 
+} from "lucide-react";
 import { MuvloMark } from "@/components/brand/MuvloMark";
-import { Button } from "@/components/ui/button";
 import { JobQueue } from "@/components/JobQueue";
 import { SettingsPanel } from "@/components/SettingsPanel";
-import { useSourceFileActions } from "@/hooks/useSourceFileActions";
-import { useWorkspaceStore } from "@/stores/workspaceStore";
-import { toast } from "sonner";
 
 const NAV_ITEMS = [
   { path: "/", label: "Dashboard", icon: LayoutDashboard },
@@ -32,21 +34,27 @@ const NAV_ITEMS = [
 
 export function Sidebar() {
   const location = useLocation();
-  const activeFile = useWorkspaceStore((state) => state.activeFile);
-  const { openSourceFile } = useSourceFileActions();
+  const { state } = useSidebar();
+  const collapsed = state === "collapsed";
 
   return (
-    <ShadcnSidebar variant="inset">
-      <SidebarHeader className="px-5 pt-6 pb-2">
-        <Link to="/" className="flex items-center w-fit opacity-80 hover:opacity-100 transition-opacity">
-          <MuvloMark key="hmr-flush" className="size-7" />
-        </Link>
+    <ShadcnSidebar variant="inset" collapsible="icon">
+      <SidebarHeader className="px-3 pt-4 pb-3 group-data-[collapsible=icon]:px-2 group-data-[collapsible=icon]:pt-3 group-data-[collapsible=icon]:pb-2">
+        <div className={collapsed ? "flex flex-col items-center gap-2" : "flex items-center justify-between"}>
+          <Link
+            to="/"
+            className={collapsed ? "flex items-center justify-center opacity-90 transition-opacity hover:opacity-100" : "flex items-center opacity-80 transition-opacity hover:opacity-100"}
+          >
+            <MuvloMark key="hmr-flush" className={collapsed ? "size-6" : "size-7"} />
+          </Link>
+          <SidebarTrigger className="h-8 w-8 opacity-60 transition-opacity hover:opacity-100 group-data-[collapsible=icon]:h-7 group-data-[collapsible=icon]:w-7" />
+        </div>
       </SidebarHeader>
-      <SidebarContent>
-        <SidebarGroup>
+      <SidebarContent className="group-data-[collapsible=icon]:pt-2">
+        <SidebarGroup className="group-data-[collapsible=icon]:px-2">
           <SidebarGroupLabel>Workflows</SidebarGroupLabel>
           <SidebarGroupContent>
-            <SidebarMenu>
+            <SidebarMenu className="gap-1">
               {NAV_ITEMS.map((item) => {
                 const isActive = location.pathname === item.path;
                 return (
@@ -56,7 +64,7 @@ export function Sidebar() {
                       tooltip={item.label}
                       render={<Link to={item.path} />}
                     >
-                      <item.icon className="mr-2 h-4 w-4" />
+                      <item.icon className="h-4 w-4" />
                       <span>{item.label}</span>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
@@ -66,31 +74,22 @@ export function Sidebar() {
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
-      <SidebarFooter className="border-t border-border px-2.5 py-3 space-y-2.5">
-        {activeFile && (
-          <div className="min-w-0 rounded-lg bg-sidebar-accent/40 px-2.5 py-2">
-            <p className="truncate text-xs font-medium text-sidebar-foreground">{activeFile.name}</p>
-            <p className="text-[11px] text-sidebar-foreground/50">Active source</p>
+      <div className="mt-auto">
+        <SidebarSeparator className="mx-0 w-full" />
+        <SidebarFooter className="px-2 py-3 group-data-[collapsible=icon]:px-2 group-data-[collapsible=icon]:py-2">
+          <div className="flex w-full flex-col gap-1 group-data-[collapsible=icon]:items-center">
+            <SidebarMenu className="gap-1">
+              <SidebarMenuItem>
+                <JobQueue />
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SettingsPanel />
+              </SidebarMenuItem>
+            </SidebarMenu>
           </div>
-        )}
-        <div className="flex items-center gap-2">
-          <Button
-            type="button"
-            variant="secondary"
-            className="flex-1 justify-start gap-2 text-sm"
-            onClick={() => {
-              void openSourceFile().catch((error) => {
-                toast.error(error instanceof Error ? error.message : "Failed to open the file picker.");
-              });
-            }}
-          >
-            <FolderOpen className="h-4 w-4 shrink-0" />
-            Open Source
-          </Button>
-          <JobQueue />
-          <SettingsPanel />
-        </div>
-      </SidebarFooter>
+        </SidebarFooter>
+      </div>
+      <SidebarRail />
     </ShadcnSidebar>
   );
 }

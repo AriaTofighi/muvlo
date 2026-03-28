@@ -6,11 +6,13 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { Button, buttonVariants } from "@/components/ui/button";
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { SidebarMenuButton } from "@/components/ui/sidebar";
 import { Settings } from "lucide-react";
+import { useTheme } from "next-themes";
 import { toast } from "sonner";
 import { useEffect } from "react";
 
@@ -18,19 +20,23 @@ export function SettingsPanel() {
   const {
     ffmpegPath, setFfmpegPath,
     outputDirectory, setOutputDirectory,
-    theme, setTheme
+    theme,
+    setTheme: setStoredTheme,
   } = useSettingsStore();
+  const { theme: activeTheme, setTheme } = useTheme();
 
   useEffect(() => {
-    const root = window.document.documentElement;
-    root.classList.remove("light", "dark");
-    if (theme === "system") {
-      const systemTheme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
-      root.classList.add(systemTheme);
-    } else {
-      root.classList.add(theme);
+    if (!activeTheme || activeTheme === theme) {
+      return;
     }
-  }, [theme]);
+
+    setTheme(theme);
+  }, [activeTheme, theme, setTheme]);
+
+  const handleThemeChange = (value: "system" | "dark" | "light") => {
+    setStoredTheme(value);
+    setTheme(value);
+  };
 
   const handleSave = () => {
     toast.success("Settings saved successfully.");
@@ -38,9 +44,14 @@ export function SettingsPanel() {
 
   return (
     <Dialog>
-      <DialogTrigger className={buttonVariants({ variant: "outline", size: "icon" })}>
-        <Settings className="h-4 w-4" />
-      </DialogTrigger>
+      <DialogTrigger
+        render={
+          <SidebarMenuButton tooltip="Settings">
+            <Settings className="h-4 w-4" />
+            <span>Settings</span>
+          </SidebarMenuButton>
+        }
+      />
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>Settings</DialogTitle>
@@ -73,7 +84,7 @@ export function SettingsPanel() {
 
           <div className="space-y-2">
             <Label>Appearance</Label>
-            <Select value={theme} onValueChange={(val: any) => val && setTheme(val)}>
+            <Select value={theme} onValueChange={(value) => handleThemeChange(value as "system" | "dark" | "light")}>
               <SelectTrigger>
                 <SelectValue placeholder="Select theme" />
               </SelectTrigger>

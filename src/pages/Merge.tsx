@@ -118,13 +118,13 @@ export function Merge() {
 
       <Card>
         <CardHeader>
-          <CardTitle>Files to Merge</CardTitle>
+          <CardTitle>Files to merge</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           {activeFile && (
-            <div className="flex items-center justify-between p-3 border rounded-xl bg-muted/10">
+            <div className="flex items-center justify-between rounded-xl bg-muted/10 p-3">
               <div className="flex items-center gap-3 min-w-0">
-                <div className="flex shrink-0 items-center justify-center p-2 rounded-lg border bg-background">
+                <div className="flex shrink-0 items-center justify-center rounded-lg bg-background/80 p-2">
                   <FileVideo className="h-4 w-4 text-muted-foreground" />
                 </div>
                 <div className="min-w-0">
@@ -139,9 +139,9 @@ export function Merge() {
           )}
 
           {files.length > 0 && (
-            <div className="flex flex-col gap-2 p-1 border rounded-xl bg-muted/5">
+            <div className="flex flex-col gap-2 rounded-xl bg-muted/5 p-1">
               {files.map((file) => (
-                <div key={file.path} className="flex items-center gap-3 p-2 rounded-lg border bg-background shadow-sm group transition-all">
+                <div key={file.path} className="flex items-center gap-3 rounded-lg bg-background/80 p-2 group transition-all">
                   <GripVertical className="h-4 w-4 text-muted-foreground/40 cursor-grab active:cursor-grabbing" />
                   <div className="min-w-0 flex-1">
                     <p className="text-sm font-medium truncate">{file.name}</p>

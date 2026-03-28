@@ -139,7 +139,7 @@ export function Trim() {
           <CardTitle>Timeline</CardTitle>
         </CardHeader>
         <CardContent className="space-y-6 pt-6">
-          <div className="rounded-xl border bg-card/40 p-2">
+          <div className="rounded-xl bg-card/40 p-2">
             <div className="relative h-20 w-full overflow-hidden rounded-[4px] bg-muted">
               <div
                 className="absolute inset-y-0 bg-accent/20 border-x border-accent"

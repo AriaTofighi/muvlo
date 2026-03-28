@@ -12,6 +12,9 @@ interface FormatPickerProps {
   value: string;
   onChange: (val: string) => void;
   type?: "video" | "audio" | "image" | "all";
+  imageFormats?: string[];
+  audioFormats?: string[];
+  videoFormats?: string[];
 }
 
 const FORMATS = {
@@ -20,7 +23,18 @@ const FORMATS = {
   image: ["png", "jpg", "webp", "gif", "avif"],
 };
 
-export function FormatPicker({ value, onChange, type = "all" }: FormatPickerProps) {
+export function FormatPicker({
+  value,
+  onChange,
+  type = "all",
+  imageFormats,
+  audioFormats,
+  videoFormats,
+}: FormatPickerProps) {
+  const resolvedVideoFormats = videoFormats ?? FORMATS.video;
+  const resolvedAudioFormats = audioFormats ?? FORMATS.audio;
+  const resolvedImageFormats = imageFormats ?? FORMATS.image;
+
   return (
     <Select value={value} onValueChange={(val) => val && onChange(val)}>
       <SelectTrigger className="w-[180px]">
@@ -30,7 +44,7 @@ export function FormatPicker({ value, onChange, type = "all" }: FormatPickerProp
         {(type === "all" || type === "video") && (
           <SelectGroup>
             <SelectLabel>Video Formats</SelectLabel>
-            {FORMATS.video.map((fmt) => (
+            {resolvedVideoFormats.map((fmt) => (
               <SelectItem key={fmt} value={fmt}>
                 .{fmt}
               </SelectItem>
@@ -40,7 +54,7 @@ export function FormatPicker({ value, onChange, type = "all" }: FormatPickerProp
         {(type === "all" || type === "audio") && (
           <SelectGroup>
             <SelectLabel>Audio Formats</SelectLabel>
-            {FORMATS.audio.map((fmt) => (
+            {resolvedAudioFormats.map((fmt) => (
               <SelectItem key={fmt} value={fmt}>
                 .{fmt}
               </SelectItem>
@@ -50,7 +64,7 @@ export function FormatPicker({ value, onChange, type = "all" }: FormatPickerProp
         {(type === "all" || type === "image") && (
           <SelectGroup>
             <SelectLabel>Image Formats</SelectLabel>
-            {FORMATS.image.map((fmt) => (
+            {resolvedImageFormats.map((fmt) => (
               <SelectItem key={fmt} value={fmt}>
                 .{fmt}
               </SelectItem>

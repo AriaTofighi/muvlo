@@ -16,6 +16,7 @@ import { pickOutputPath, revealInExplorer } from "@/lib/media-client";
 import { buildDefaultOutputPath, buildSuggestedOutputName, normalizeWorkflowOutputPath } from "@/lib/media-helpers";
 import type { MediaJobRequest, SelectedFile } from "@/lib/media-types";
 
+const COMPRESSIBLE_IMAGE_FORMATS = ["webp", "jpg"];
 
 const normalizeQualityValue = (value: number | readonly number[]) => {
   if (Array.isArray(value)) {
@@ -34,7 +35,6 @@ export function Compress() {
   const [outputPath, setOutputPath] = useState("");
 
   const isImage = activeFile?.kind === "image";
-  const isLosslessPng = isImage && format === "png";
 
   const currentJob = useMemo(
     () =>
@@ -96,7 +96,7 @@ export function Compress() {
     });
 
     await startJob(request.jobId);
-    toast.success(`Started ${isLosslessPng ? "lossless optimization" : "compression"} at ${quality}%`);
+    toast.success(`Started compression at ${quality}%`);
   };
 
   const chooseOutput = async () => {
@@ -153,20 +153,26 @@ export function Compress() {
 
       <Card>
         <CardHeader>
-          <CardTitle>Compression Settings</CardTitle>
+          <CardTitle>Compression settings</CardTitle>
         </CardHeader>
         <CardContent className="space-y-6 pt-2">
           {isImage && (
             <div className="grid gap-2 pb-2">
               <span className="text-sm font-medium text-muted-foreground">Output Format</span>
-              <FormatPicker value={format} onChange={setFormat} type="image" />
+              <FormatPicker
+                value={format}
+                onChange={setFormat}
+                type="image"
+                imageFormats={COMPRESSIBLE_IMAGE_FORMATS}
+              />
+              <p className="text-xs leading-relaxed text-muted-foreground">
+                Compress only shows image formats that are likely to reduce size. Use Convert if you need PNG, GIF, or another exact target format.
+              </p>
             </div>
           )}
 
           <div className="space-y-4">
-            <span className="text-sm font-medium text-muted-foreground">
-              {isLosslessPng ? "Compression Effort" : "Quality Target"}
-            </span>
+            <span className="text-sm font-medium text-muted-foreground">Quality Target</span>
             <Slider
               value={[quality]}
               max={100}
@@ -174,24 +180,13 @@ export function Compress() {
               onValueChange={(value) => setQuality(normalizeQualityValue(value))}
             />
             <div className="flex justify-between text-xs text-muted-foreground">
-              <span>{isLosslessPng ? "Fastest" : "Smallest File"}</span>
+              <span>Smallest File</span>
               <span className="font-mono font-medium text-foreground bg-muted/30 px-2 py-0.5 rounded">
-                {quality}% {isLosslessPng ? "Limit" : "Quality"}
+                {quality}% Quality
               </span>
-              <span>{isLosslessPng ? "Best Zip" : "Highest Quality"}</span>
+              <span>Highest Quality</span>
             </div>
           </div>
-
-          {isLosslessPng && (
-            <div className="bg-amber-500/5 border border-amber-500/20 rounded-xl p-3 text-xs text-amber-600/90 leading-relaxed animate-in zoom-in-95 duration-300">
-              <p className="font-semibold flex items-center gap-1.5 mb-1">
-                Note on Lossless Compression
-              </p>
-              <p>
-                PNG is a strictly lossless format. Moving this slider changes how hard the computer tries to "zip" the pixels together, but it won't affect image details. For significant size reduction, consider switching to **WebP** above.
-              </p>
-            </div>
-          )}
 
           <Separator className="my-1" />
           <div className="grid gap-2 pt-3">

@@ -36,7 +36,7 @@ const KIND_META = {
   },
   unknown: {
     icon: FileQuestion,
-    label: "Source file",
+    label: "Source media",
   },
 } as const;
 
@@ -56,17 +56,17 @@ export function SourceWorkspaceCard({
   const Icon = kindMeta.icon;
 
   return (
-    <Card className="border-border/60 shadow-sm">
+    <Card>
       <CardHeader className="pb-4">
-        <CardTitle className="text-lg font-semibold tracking-tight">{title}</CardTitle>
+        <CardTitle>{title}</CardTitle>
         {description && <CardDescription>{description}</CardDescription>}
       </CardHeader>
       <CardContent className="pt-0">
         {activeFile ? (
           <div className="space-y-6">
-            <div className="flex flex-col gap-4 p-4 border rounded-xl bg-muted/20 sm:flex-row sm:items-center sm:justify-between group transition-all duration-200">
+            <div className="flex flex-col gap-4 rounded-xl bg-muted/20 p-4 sm:flex-row sm:items-center sm:justify-between group transition-all duration-200">
               <div className="flex min-w-0 items-center gap-4">
-                <div className="flex shrink-0 items-center justify-center p-2.5 rounded-lg border bg-background transition-colors">
+                <div className="flex shrink-0 items-center justify-center rounded-lg bg-background/80 p-2.5 transition-colors">
                   {activeFile.infoStatus === "loading" ? (
                     <LoaderCircle className="h-4 w-4 animate-spin text-muted-foreground" />
                   ) : (
@@ -76,7 +76,7 @@ export function SourceWorkspaceCard({
                 <div className="min-w-0">
                   <div className="flex items-center gap-2">
                     <p className="truncate font-medium text-foreground">{activeFile.name}</p>
-                    <span className="text-[10px] text-muted-foreground/60 font-medium px-1.5 py-0.5 rounded border bg-muted/40 uppercase tracking-wider">
+                    <span className="text-[10px] text-muted-foreground/60 font-medium px-1.5 py-0.5 rounded bg-muted/50 uppercase tracking-wider">
                       {activeFile.extension?.replace(".", "") ?? "FILE"}
                     </span>
                   </div>
