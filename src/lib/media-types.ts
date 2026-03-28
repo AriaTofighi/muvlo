@@ -18,6 +18,10 @@ export interface MediaInfo {
   streams: StreamInfo[];
 }
 
+export interface WaveformPreview {
+  dataUrl: string | null;
+}
+
 export interface MediaToolStatus {
   ffmpegAvailable: boolean;
   ffprobeAvailable: boolean;
@@ -40,6 +44,7 @@ export interface StreamInfo {
   codec_type: string;
   width?: number | null;
   height?: number | null;
+  avg_frame_rate?: string | null;
   sample_rate?: string | null;
   channels?: number | null;
 }
@@ -57,6 +62,10 @@ export interface ConvertJobPayload {
   inputPath: string;
   outputPath: string;
   format: string;
+  videoCodec?: string | null;
+  audioCodec?: string | null;
+  subtitleCodec?: string | null;
+  extraArgs?: string[];
   overwrite?: boolean;
 }
 
@@ -66,6 +75,11 @@ export interface TrimJobPayload {
   outputPath: string;
   startSeconds: number;
   endSeconds: number;
+  reencode?: boolean;
+  videoCodec?: string | null;
+  audioCodec?: string | null;
+  extraArgs?: string[];
+  dropVideo?: boolean;
   overwrite?: boolean;
 }
 
@@ -89,6 +103,7 @@ export interface ExtractAudioJobPayload {
   inputPath: string;
   outputPath: string;
   format: string;
+  audioCodec?: string | null;
   bitrate?: string | null;
   overwrite?: boolean;
 }

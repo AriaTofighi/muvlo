@@ -38,7 +38,7 @@ export function Sidebar() {
   const collapsed = state === "collapsed";
 
   return (
-    <ShadcnSidebar variant="inset" collapsible="icon">
+    <ShadcnSidebar variant="sidebar" collapsible="icon">
       <SidebarHeader className="px-3 pt-4 pb-3 group-data-[collapsible=icon]:px-2 group-data-[collapsible=icon]:pt-3 group-data-[collapsible=icon]:pb-2">
         <div className={collapsed ? "flex flex-col items-center gap-2" : "flex items-center justify-between"}>
           <Link

@@ -177,7 +177,7 @@ export function JobQueue() {
                       <Button
                         variant="ghost"
                         size="icon"
-                        className="h-8 w-8 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+                        className="h-8 w-8 text-muted-foreground hover:bg-muted hover:text-foreground"
                         onClick={() => removeJob(job.id)}
                         title="Remove"
                       >

@@ -11,12 +11,14 @@ function LayoutContent() {
   return (
     <div className="flex min-h-screen w-full bg-background text-foreground">
       <Sidebar />
-      <SidebarInset>
+      <SidebarInset className="flex flex-col">
         <div className="md:hidden absolute top-4 left-4 z-50">
           <SidebarTrigger />
         </div>
-        <div className="mx-auto w-full px-4 pb-8 pt-14 md:px-8 md:pb-12 md:pt-16 lg:px-12 lg:pb-16 lg:pt-20">
-          <Outlet />
+        <div className="flex-1 flex flex-col justify-center mx-auto w-full px-4 pb-12 pt-8 md:px-6 md:pt-10 lg:px-8 lg:pt-12">
+          <div className="w-full">
+            <Outlet />
+          </div>
         </div>
       </SidebarInset>
     </div>

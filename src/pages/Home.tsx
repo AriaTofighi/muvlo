@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { FileVideo, Scissors, Minimize, Combine, Music, Type, Trash2, Clock, RefreshCw } from "lucide-react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { FileDropZone } from "@/components/FileDropZone";
 import { Button } from "@/components/ui/button";
 import { useSourceFileActions } from "@/hooks/useSourceFileActions";
@@ -55,24 +55,21 @@ export function Home() {
   ];
 
   return (
-    <div className="mx-auto max-w-4xl space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+    <div className="mx-auto max-w-3xl space-y-6 animate-in fade-in duration-500">
       {!tauriReady && (
         <Card className="border-destructive/50 bg-destructive/5">
-          <CardHeader>
-            <CardTitle>Tauri runtime not detected</CardTitle>
-            <CardDescription>
-              This screen is running in a plain browser session, so native file dialogs and FFmpeg commands are unavailable.
-              Start Muvlo with <code>npm run tauri dev</code>.
-            </CardDescription>
-          </CardHeader>
+          <CardContent className="space-y-1">
+            <p className="font-semibold text-destructive">Tauri runtime not detected</p>
+            <p className="text-sm text-destructive/80">
+              This screen is running in a browser session. Native file dialogs and FFmpeg are unavailable.
+              Launch with <code>npm run tauri dev</code>.
+            </p>
+          </CardContent>
         </Card>
       )}
 
       <Card>
-        <CardHeader>
-          <CardTitle>Source media</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
+        <CardContent>
           {activeFile ? (
             <div className="flex items-center justify-between rounded-xl bg-muted/20 p-4">
               <div className="flex items-center gap-4 min-w-0">
@@ -89,7 +86,7 @@ export function Home() {
                   <RefreshCw className="mr-2 h-3.5 w-3.5" />
                   Replace
                 </Button>
-                <Button variant="ghost" size="icon" onClick={clearActiveFile} className="h-8 w-8 text-muted-foreground hover:text-destructive hover:bg-destructive/5 transition-colors">
+                <Button variant="ghost" size="icon" onClick={clearActiveFile} className="h-8 w-8 text-muted-foreground hover:bg-muted hover:text-foreground transition-colors">
                   <Trash2 className="h-4 w-4" />
                 </Button>
               </div>
@@ -112,42 +109,42 @@ export function Home() {
 
       {recentFiles.length > 0 && (
         <Card>
-          <CardHeader>
-            <CardTitle className="text-sm font-semibold flex items-center gap-2">
+          <CardContent className="space-y-4">
+            <div className="flex items-center gap-2 text-sm font-semibold text-muted-foreground/80">
               <Clock className="h-4 w-4" />
               Recent Imports
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="grid gap-2 sm:grid-cols-2">
-            {recentFiles.slice(0, 4).map((file) => (
-              <button
-                key={file.path}
-                className="flex items-center justify-between gap-4 rounded-xl border border-border/50 bg-card/50 p-3 text-left transition hover:border-accent/40 hover:bg-accent/5 group"
-                onClick={() => void selectActiveFile(file).then(() => navigate("/convert"))}
-                type="button"
-              >
-                <div className="min-w-0 flex-1">
-                  <p className="truncate text-sm font-medium group-hover:text-accent transition-colors">{file.name}</p>
-                  <p className="text-[10px] text-muted-foreground/60 truncate font-mono lowercase">{file.path}</p>
-                </div>
-                <span className="shrink-0 text-[10px] font-semibold text-muted-foreground/50 border rounded px-1.5 py-0.5 bg-muted/30">
-                  {formatFileSize(file.size)}
-                </span>
-              </button>
-            ))}
+            </div>
+            <div className="grid gap-2 sm:grid-cols-2">
+              {recentFiles.slice(0, 4).map((file) => (
+                <button
+                  key={file.path}
+                  className="flex items-center justify-between gap-4 rounded-xl border border-border/50 bg-card/50 p-3 text-left transition hover:border-accent/40 hover:bg-accent/5 group"
+                  onClick={() => void selectActiveFile(file).then(() => navigate("/convert"))}
+                  type="button"
+                >
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm font-medium group-hover:text-accent transition-colors">{file.name}</p>
+                    <p className="text-[10px] text-muted-foreground/60 truncate font-mono lowercase">{file.path}</p>
+                  </div>
+                  <span className="shrink-0 text-[10px] font-semibold text-muted-foreground/50 border rounded px-1.5 py-0.5 bg-muted/30">
+                    {formatFileSize(file.size)}
+                  </span>
+                </button>
+              ))}
+            </div>
           </CardContent>
         </Card>
       )}
 
-      <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {workflows.map((workflow) => (
           <Link key={workflow.path} to={workflow.path}>
             <Card className="h-full transition hover:border-accent/40 hover:bg-accent/5 group">
-              <CardHeader>
-                <workflow.icon className="mb-2 h-6 w-6 text-muted-foreground group-hover:text-accent transition-colors" />
-                <CardTitle className="group-hover:text-accent transition-colors">{workflow.title}</CardTitle>
-                <CardDescription>{workflow.desc}</CardDescription>
-              </CardHeader>
+              <CardContent className="flex flex-col items-start px-5 py-2">
+                <workflow.icon className="mb-3 h-6 w-6 text-muted-foreground group-hover:text-accent transition-colors" />
+                <p className="font-semibold text-foreground group-hover:text-accent transition-colors">{workflow.title}</p>
+                <p className="text-sm text-muted-foreground">{workflow.desc}</p>
+              </CardContent>
             </Card>
           </Link>
         ))}
@@ -155,12 +152,12 @@ export function Home() {
 
       {toolStatus && (!toolStatus.ffmpegAvailable || !toolStatus.ffprobeAvailable) && (
         <Card className="border-destructive/50 bg-destructive/5">
-          <CardHeader>
-            <CardTitle>FFmpeg tools not ready</CardTitle>
-            <CardDescription>
-              Muvlo needs both `ffmpeg` and `ffprobe` on your system path before jobs can run.
-            </CardDescription>
-          </CardHeader>
+          <CardContent className="space-y-1">
+            <p className="font-semibold text-destructive">FFmpeg tools not ready</p>
+            <p className="text-sm text-destructive/80">
+              Muvlo needs <code>ffmpeg</code> and <code>ffprobe</code> on your system path.
+            </p>
+          </CardContent>
         </Card>
       )}
     </div>

@@ -89,6 +89,14 @@ pub struct TrimJobRequest {
     pub end_seconds: Option<f64>,
     #[serde(default)]
     pub reencode: bool,
+    #[serde(default)]
+    pub video_codec: Option<String>,
+    #[serde(default)]
+    pub audio_codec: Option<String>,
+    #[serde(default)]
+    pub extra_args: Vec<String>,
+    #[serde(default)]
+    pub drop_video: bool,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -117,6 +125,8 @@ pub struct ExtractAudioJobRequest {
     pub input_path: String,
     pub output_path: String,
     pub format: AudioFormat,
+    #[serde(default)]
+    pub audio_codec: Option<String>,
     #[serde(default)]
     pub bitrate: Option<String>,
 }
@@ -659,31 +669,54 @@ fn build_trim_plan(request: &TrimJobRequest) -> Result<CommandPlan, String> {
         format!("{}", request.start_seconds),
         "-i".to_string(),
         request.input_path.clone(),
-        "-map".to_string(),
-        "0".to_string(),
     ];
+
+    if request.drop_video {
+        args.extend(["-map".to_string(), "0:a:0".to_string()]);
+    } else {
+        args.extend(["-map".to_string(), "0".to_string()]);
+    }
 
     if let Some(end_seconds) = request.end_seconds {
         let duration = (end_seconds - request.start_seconds).max(0.0);
         args.extend(["-t".to_string(), format!("{duration}")]);
     }
 
-    if request.reencode {
+    let needs_reencode =
+        request.reencode || request.video_codec.is_some() || request.audio_codec.is_some() || request.drop_video || !request.extra_args.is_empty();
+
+    if request.drop_video {
+        args.extend(["-vn".to_string(), "-sn".to_string(), "-dn".to_string()]);
+    }
+
+    if needs_reencode {
         let flavor = detect_media_flavor(Path::new(&request.input_path));
         if matches!(flavor, MediaFlavor::AudioOnly) {
-            args.extend(["-c:a".to_string(), "aac".to_string()]);
+            let audio_codec = request
+                .audio_codec
+                .clone()
+                .unwrap_or_else(|| "aac".to_string());
+            args.extend(["-c:a".to_string(), audio_codec]);
         } else {
-            args.extend([
-                "-c:v".to_string(),
-                "libx264".to_string(),
-                "-c:a".to_string(),
-                "aac".to_string(),
-            ]);
+            if !request.drop_video {
+                let video_codec = request
+                    .video_codec
+                    .clone()
+                    .unwrap_or_else(|| "libx264".to_string());
+                args.extend(["-c:v".to_string(), video_codec]);
+            }
+
+            let audio_codec = request
+                .audio_codec
+                .clone()
+                .unwrap_or_else(|| "aac".to_string());
+            args.extend(["-c:a".to_string(), audio_codec]);
         }
     } else {
         args.extend(["-c".to_string(), "copy".to_string()]);
     }
 
+    args.extend(request.extra_args.iter().cloned());
     args.push(request.output_path.clone());
 
     Ok(CommandPlan {
@@ -816,7 +849,11 @@ fn build_merge_plan(request: &MergeJobRequest, job_id: &str) -> Result<CommandPl
 }
 
 fn build_extract_audio_plan(request: &ExtractAudioJobRequest) -> Result<CommandPlan, String> {
-    let codec = audio_codec_for_format(&request.format).unwrap_or("aac");
+    let codec = request
+        .audio_codec
+        .as_deref()
+        .or_else(|| audio_codec_for_format(&request.format))
+        .unwrap_or("aac");
 
     let mut args = vec![
         "-y".to_string(),

@@ -1,11 +1,10 @@
 import { useEffect, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { FileDropZone } from "@/components/FileDropZone";
 import { Input } from "@/components/ui/input";
 import { Combine, Folder, GripVertical, Plus, Save, Square, Trash2, FileVideo } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
-import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner";
 import { useJobStore } from "@/stores/jobStore";
 import { useWorkspaceStore } from "@/stores/workspaceStore";
@@ -111,15 +110,12 @@ export function Merge() {
   };
 
   return (
-    <div className="mx-auto max-w-3xl space-y-8 animate-in fade-in duration-500">
-      <div>
+    <div className="mx-auto max-w-3xl space-y-6 animate-in fade-in duration-500">
+      <div className="mb-6">
         <h2 className="text-3xl font-bold tracking-tight">Merge</h2>
       </div>
 
       <Card>
-        <CardHeader>
-          <CardTitle>Files to merge</CardTitle>
-        </CardHeader>
         <CardContent className="space-y-4">
           {activeFile && (
             <div className="flex items-center justify-between rounded-xl bg-muted/10 p-3">
@@ -147,7 +143,7 @@ export function Merge() {
                     <p className="text-sm font-medium truncate">{file.name}</p>
                     <p className="text-[10px] text-muted-foreground/60 font-mono truncate lowercase">{file.path}</p>
                   </div>
-                  <Button variant="ghost" size="icon" onClick={() => removeMergeFile(file.path)} className="h-8 w-8 text-muted-foreground hover:text-destructive hover:bg-destructive/5">
+                  <Button variant="ghost" size="icon" onClick={() => removeMergeFile(file.path)} className="h-8 w-8 text-muted-foreground hover:bg-muted hover:text-foreground">
                     <Trash2 className="h-4 w-4" />
                   </Button>
                 </div>
@@ -178,13 +174,11 @@ export function Merge() {
             }}
             label="Add files to the merge list"
             hint={undefined}
-            className="p-6"
+            className="py-12"
           />
 
-          <Separator className="my-1" />
-
-          <div className="grid gap-2 pt-3">
-            <span className="text-sm font-medium">Output Path</span>
+          <div className="grid gap-2 pt-2 border-t border-border/20">
+            <span className="text-sm font-medium">Output path</span>
             <div className="flex flex-col gap-3 sm:flex-row">
               <Input value={outputPath} onChange={(event) => setOutputPath(event.target.value)} placeholder="Choose where to save the merged file" />
               <Button variant="secondary" onClick={() => void chooseOutput()} disabled={files.length === 0}>
@@ -196,8 +190,8 @@ export function Merge() {
       </Card>
 
       {currentJob?.status === "running" ? (
-        <Card className="border-accent">
-          <CardContent className="pt-6 space-y-4">
+        <Card>
+          <CardContent className="space-y-4">
             <div className="flex justify-between text-sm">
               <span>{currentJob.phase ?? "Merging"}...</span>
               <span className="font-mono">{Math.round(currentJob.progress)}%</span>
@@ -211,8 +205,8 @@ export function Merge() {
           </CardContent>
         </Card>
       ) : currentJob?.status === "completed" ? (
-        <Card className="border-success/40 bg-success/5">
-          <CardContent className="p-4">
+        <Card className="bg-success/5">
+          <CardContent>
             <div className="flex items-center justify-between gap-4">
               <div className="min-w-0">
                 <p className="font-medium text-success">Merge completed</p>

@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { FileDropZone } from "@/components/FileDropZone";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -142,8 +142,8 @@ export function Subtitles() {
   };
 
   return (
-    <div className="mx-auto max-w-3xl space-y-8 animate-in fade-in duration-500">
-      <div>
+    <div className="mx-auto max-w-3xl space-y-6 animate-in fade-in duration-500">
+      <div className="mb-6">
         <h2 className="text-3xl font-bold tracking-tight">Add Subtitles</h2>
       </div>
 
@@ -160,9 +160,6 @@ export function Subtitles() {
       />
 
       <Card>
-        <CardHeader>
-          <CardTitle>Subtitle file</CardTitle>
-        </CardHeader>
         <CardContent>
           {subtitleFile ? (
             <div className="flex items-center gap-3 rounded-xl bg-muted/20 p-4">
@@ -173,7 +170,7 @@ export function Subtitles() {
                 <p className="font-medium text-foreground truncate">{subtitleFile.name}</p>
                 <p className="text-xs text-muted-foreground/70 font-mono mt-0.5 truncate lowercase">{subtitleFile.path}</p>
               </div>
-              <Button variant="ghost" size="icon" onClick={clearSubtitleFile} className="h-8 w-8 text-muted-foreground hover:text-destructive hover:bg-destructive/5 transition-colors">
+              <Button variant="ghost" size="icon" onClick={clearSubtitleFile} className="h-8 w-8 text-muted-foreground hover:bg-muted hover:text-foreground transition-colors">
                 <Trash2 className="h-4 w-4" />
               </Button>
             </div>
@@ -187,16 +184,13 @@ export function Subtitles() {
               onFilesDrop={(files) => void handleDroppedSubtitle(files)}
               label="Choose a subtitle file"
               hint={undefined}
-              className="py-6"
+              className="py-5"
             />
           )}
         </CardContent>
       </Card>
 
       <Card>
-        <CardHeader>
-          <CardTitle>Adding method</CardTitle>
-        </CardHeader>
         <CardContent className="space-y-4">
           <Select value={mode} onValueChange={(value) => value && setMode(value)}>
             <SelectTrigger className="w-full sm:w-[300px]">
@@ -223,7 +217,7 @@ export function Subtitles() {
       </Card>
 
       {currentJob?.status === "running" ? (
-        <Card className="border-accent">
+        <Card>
           <CardContent className="pt-6 space-y-4">
             <div className="flex justify-between text-sm">
               <span>{currentJob.phase ?? "Adding subtitles"}...</span>
@@ -238,8 +232,8 @@ export function Subtitles() {
           </CardContent>
         </Card>
       ) : currentJob?.status === "completed" ? (
-        <Card className="border-success/40 bg-success/5">
-          <CardContent className="p-4">
+        <Card className="bg-success/5">
+          <CardContent>
             <div className="flex items-center justify-between gap-4">
               <div className="min-w-0">
                 <p className="font-medium text-success">Subtitle job completed</p>

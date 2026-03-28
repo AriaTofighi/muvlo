@@ -1,10 +1,9 @@
 import { useEffect, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Slider } from "@/components/ui/slider";
 import { Progress } from "@/components/ui/progress";
-import { Separator } from "@/components/ui/separator";
 import { FormatPicker } from "@/components/FormatPicker";
 import { SourceWorkspaceCard } from "@/components/workspace/SourceWorkspaceCard";
 import { Folder, Minimize, Save, Square } from "lucide-react";
@@ -134,8 +133,8 @@ export function Compress() {
   };
 
   return (
-    <div className="mx-auto max-w-3xl space-y-8 animate-in fade-in duration-500">
-      <div>
+    <div className="mx-auto max-w-3xl space-y-6 animate-in fade-in duration-500">
+      <div className="mb-6">
         <h2 className="text-3xl font-bold tracking-tight">Compress</h2>
       </div>
 
@@ -148,49 +147,44 @@ export function Compress() {
         }}
         onRemoveSource={() => useWorkspaceStore.getState().clearActiveFile()}
         onDropSource={(files) => void handleDroppedSource(files)}
-        title="Source media"
       />
 
       <Card>
-        <CardHeader>
-          <CardTitle>Compression settings</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-6 pt-2">
+        <CardContent className="space-y-6">
           {isImage && (
-            <div className="grid gap-2 pb-2">
-              <span className="text-sm font-medium text-muted-foreground">Output Format</span>
+            <div className="grid gap-2">
+              <span className="text-sm font-medium">Output format</span>
               <FormatPicker
                 value={format}
                 onChange={setFormat}
                 type="image"
                 imageFormats={COMPRESSIBLE_IMAGE_FORMATS}
               />
-              <p className="text-xs leading-relaxed text-muted-foreground">
-                Compress only shows image formats that are likely to reduce size. Use Convert if you need PNG, GIF, or another exact target format.
+              <p className="text-xs leading-relaxed text-muted-foreground/60">
+                Only showing formats likely to reduce size. Use Convert for exact target formats.
               </p>
             </div>
           )}
 
           <div className="space-y-4">
-            <span className="text-sm font-medium text-muted-foreground">Quality Target</span>
+            <span className="text-sm font-medium">Quality target</span>
             <Slider
               value={[quality]}
               max={100}
               step={1}
               onValueChange={(value) => setQuality(normalizeQualityValue(value))}
             />
-            <div className="flex justify-between text-xs text-muted-foreground">
-              <span>Smallest File</span>
+            <div className="flex justify-between text-xs text-muted-foreground/60">
+              <span className="font-semibold uppercase tracking-widest text-[10px]">Smallest</span>
               <span className="font-mono font-medium text-foreground bg-muted/30 px-2 py-0.5 rounded">
                 {quality}% Quality
               </span>
-              <span>Highest Quality</span>
+              <span className="font-semibold uppercase tracking-widest text-[10px]">Highest</span>
             </div>
           </div>
 
-          <Separator className="my-1" />
-          <div className="grid gap-2 pt-3">
-            <span className="text-sm font-medium">Output Path</span>
+          <div className="grid gap-2 pt-2 border-t border-border/20">
+            <span className="text-sm font-medium">Output path</span>
             <div className="flex flex-col gap-3 sm:flex-row">
               <Input value={outputPath} onChange={(event) => setOutputPath(event.target.value)} placeholder="Choose where to save the compressed file" />
               <Button variant="secondary" onClick={() => void chooseOutput()} disabled={!activeFile}>
@@ -202,8 +196,8 @@ export function Compress() {
       </Card>
 
       {currentJob?.status === "running" ? (
-        <Card className="border-accent">
-          <CardContent className="pt-6 space-y-4">
+        <Card>
+          <CardContent className="space-y-4">
             <div className="flex justify-between text-sm">
               <span>{currentJob.phase ?? "Compressing"}...</span>
               <span className="font-mono">{Math.round(currentJob.progress)}%</span>
@@ -217,8 +211,8 @@ export function Compress() {
           </CardContent>
         </Card>
       ) : currentJob?.status === "completed" ? (
-        <Card className="border-success/40 bg-success/5">
-          <CardContent className="p-4">
+        <Card className="bg-success/5">
+          <CardContent>
             <div className="flex items-center justify-between gap-4">
               <div className="min-w-0">
                 <p className="font-medium text-success">Compression completed</p>

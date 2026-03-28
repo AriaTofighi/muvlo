@@ -19,6 +19,7 @@ pub fn run() {
             ffmpeg::start_media_job,
             ffmpeg::cancel_media_job,
             probe::get_media_info,
+            probe::get_waveform_preview,
             probe::get_ffprobe_available
         ])
         .run(tauri::generate_context!())

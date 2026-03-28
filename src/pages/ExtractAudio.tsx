@@ -1,19 +1,20 @@
 import { useEffect, useMemo, useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { FormatPicker } from "@/components/FormatPicker";
-import { SourceWorkspaceCard } from "@/components/workspace/SourceWorkspaceCard";
-import { Progress } from "@/components/ui/progress";
-import { Separator } from "@/components/ui/separator";
-import { Folder, Play, Save, Square } from "lucide-react";
+import { ChevronDown, ChevronUp, Folder, Play, Save, Square } from "lucide-react";
 import { toast } from "sonner";
+import { OutputGuidanceCard } from "@/components/export/OutputGuidanceCard";
+import { SourceWorkspaceCard } from "@/components/workspace/SourceWorkspaceCard";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Progress } from "@/components/ui/progress";
+import { FormatPicker } from "@/components/FormatPicker";
+import { VIDEO_AND_AUDIO_FILTERS, buildDefaultOutputPath, buildSuggestedOutputName, normalizeWorkflowOutputPath } from "@/lib/media-helpers";
+import { pickOutputPath, revealInExplorer } from "@/lib/media-client";
+import type { MediaJobRequest, SelectedFile } from "@/lib/media-types";
+import { buildOutputGuidance } from "@/lib/output-guidance";
 import { useSourceFileActions } from "@/hooks/useSourceFileActions";
 import { useJobStore } from "@/stores/jobStore";
 import { useWorkspaceStore } from "@/stores/workspaceStore";
-import { pickOutputPath, revealInExplorer } from "@/lib/media-client";
-import { VIDEO_AND_AUDIO_FILTERS, buildDefaultOutputPath, buildSuggestedOutputName, normalizeWorkflowOutputPath } from "@/lib/media-helpers";
-import type { MediaJobRequest, SelectedFile } from "@/lib/media-types";
 
 export function ExtractAudio() {
   const activeFile = useWorkspaceStore((state) => state.activeFile);
@@ -21,14 +22,24 @@ export function ExtractAudio() {
   const { openSourceFile } = useSourceFileActions();
   const [format, setFormat] = useState("mp3");
   const [outputPath, setOutputPath] = useState("");
+  const [audioCodec, setAudioCodec] = useState("");
+  const [audioBitrate, setAudioBitrate] = useState("");
+  const [showAdvanced, setShowAdvanced] = useState(false);
 
   useEffect(() => {
-    if (activeFile) {
-      setOutputPath(buildDefaultOutputPath(activeFile, format, "-audio"));
-    } else {
+    if (!activeFile) {
+      setFormat("mp3");
       setOutputPath("");
+      setAudioCodec("");
+      setAudioBitrate("");
+      return;
     }
-  }, [activeFile, format]);
+
+    setFormat("mp3");
+    setOutputPath(buildDefaultOutputPath(activeFile, "mp3", "-audio"));
+    setAudioCodec("");
+    setAudioBitrate("");
+  }, [activeFile]);
 
   const currentJob = useMemo(
     () =>
@@ -43,6 +54,20 @@ export function ExtractAudio() {
     [activeFile?.path, jobs],
   );
 
+  const guidance = useMemo(() => {
+    if (!activeFile) {
+      return null;
+    }
+
+    return buildOutputGuidance({
+      file: activeFile,
+      format,
+      outputKind: "audio",
+      audioCodec,
+      audioBitrateKbps: parseOptionalInt(audioBitrate),
+    });
+  }, [activeFile, audioBitrate, audioCodec, format]);
+
   const chooseOutput = async () => {
     if (!activeFile) {
       toast.error("Select a source file first.");
@@ -55,6 +80,14 @@ export function ExtractAudio() {
 
     if (nextPath) {
       setOutputPath(nextPath);
+    }
+  };
+
+  const handleFormatChange = (nextFormat: string) => {
+    setFormat(nextFormat);
+
+    if (activeFile) {
+      setOutputPath(buildDefaultOutputPath(activeFile, nextFormat, "-audio"));
     }
   };
 
@@ -77,7 +110,8 @@ export function ExtractAudio() {
         inputPath: activeFile.path,
         outputPath: normalizedOutput.path,
         format,
-        bitrate: format === "flac" || format === "wav" ? null : "192k",
+        audioCodec: audioCodec.trim() || null,
+        bitrate: parseOptionalInt(audioBitrate) != null ? `${parseOptionalInt(audioBitrate)}k` : null,
         overwrite: true,
       },
     };
@@ -113,8 +147,8 @@ export function ExtractAudio() {
   };
 
   return (
-    <div className="mx-auto max-w-3xl space-y-8 animate-in fade-in duration-500">
-      <div>
+    <div className="mx-auto max-w-3xl space-y-6 animate-in fade-in duration-500">
+      <div className="mb-6">
         <h2 className="text-3xl font-bold tracking-tight">Extract Audio</h2>
       </div>
 
@@ -130,17 +164,71 @@ export function ExtractAudio() {
       />
 
       <Card>
-        <CardHeader>
-          <CardTitle>Target settings</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid gap-2">
-            <span className="text-sm font-medium">Output Format</span>
-            <FormatPicker value={format} onChange={setFormat} type="audio" />
+        <CardContent className="space-y-5">
+          <div className="grid gap-4">
+            <div className="grid gap-2">
+              <span className="text-sm font-medium">Output format</span>
+              <FormatPicker value={format} onChange={handleFormatChange} type="audio" />
+            </div>
           </div>
-          <Separator className="my-1" />
-          <div className="grid gap-2 pt-3">
-            <span className="text-sm font-medium">Output Path</span>
+
+          <div className="flex items-center gap-4 pt-1">
+            <div className="flex-1 h-px bg-border/40" />
+            <button
+              type="button"
+              onClick={() => setShowAdvanced((value) => !value)}
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "0.35rem",
+                padding: "0.15rem 0.65rem",
+                borderRadius: "9999px",
+                background: "transparent",
+                border: "1px solid var(--border)",
+                color: "var(--muted-foreground)",
+                fontSize: "0.675rem",
+                fontWeight: 600,
+                textTransform: "uppercase",
+                letterSpacing: "0.05em",
+                cursor: "pointer",
+                transition: "all 150ms",
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.background = "var(--muted)";
+                e.currentTarget.style.color = "var(--foreground)";
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = "transparent";
+                e.currentTarget.style.color = "var(--muted-foreground)";
+              }}
+            >
+              <span>Advanced settings</span>
+              {showAdvanced ? (
+                <ChevronUp size={11} strokeWidth={2.5} className="opacity-80" />
+              ) : (
+                <ChevronDown size={11} strokeWidth={2.5} className="opacity-80" />
+              )}
+            </button>
+            <div className="flex-1 h-px bg-border/40" />
+          </div>
+
+          {showAdvanced && (
+            <div className="rounded-xl border bg-muted/10 p-4">
+              <div className="grid gap-3 md:grid-cols-2">
+                <div className="grid gap-2">
+                  <span className="text-sm font-medium">Audio codec</span>
+                  <Input value={audioCodec} onChange={(event) => setAudioCodec(event.target.value)} placeholder="Auto / libmp3lame / aac" />
+                </div>
+                <div className="grid gap-2">
+                  <span className="text-sm font-medium">Audio bitrate kbps</span>
+                  <Input value={audioBitrate} onChange={(event) => setAudioBitrate(event.target.value)} placeholder="Auto" />
+                </div>
+              </div>
+            </div>
+          )}
+
+          <div className="grid gap-2 pt-2 border-t border-border/20">
+            <span className="text-sm font-medium">Output path</span>
             <div className="flex flex-col gap-3 sm:flex-row">
               <Input value={outputPath} onChange={(event) => setOutputPath(event.target.value)} placeholder="Choose where to save the extracted audio" />
               <Button variant="secondary" onClick={() => void chooseOutput()} disabled={!activeFile}>
@@ -151,9 +239,11 @@ export function ExtractAudio() {
         </CardContent>
       </Card>
 
+      {guidance && <OutputGuidanceCard guidance={guidance} />}
+
       {currentJob?.status === "running" ? (
-        <Card className="border-accent">
-          <CardContent className="pt-6 space-y-4">
+        <Card>
+          <CardContent className="space-y-4">
             <div className="flex justify-between text-sm">
               <span>{currentJob.phase ?? "Extracting"}...</span>
               <span className="font-mono">{Math.round(currentJob.progress)}%</span>
@@ -167,8 +257,8 @@ export function ExtractAudio() {
           </CardContent>
         </Card>
       ) : currentJob?.status === "completed" ? (
-        <Card className="border-success/40 bg-success/5">
-          <CardContent className="p-4">
+        <Card className="bg-success/5">
+          <CardContent>
             <div className="flex items-center justify-between gap-4">
               <div className="min-w-0">
                 <p className="font-medium text-success">Audio extraction completed</p>
@@ -194,4 +284,9 @@ export function ExtractAudio() {
       </div>
     </div>
   );
+}
+
+function parseOptionalInt(value: string) {
+  const parsed = Number.parseInt(value, 10);
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : undefined;
 }

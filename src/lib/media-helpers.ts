@@ -139,3 +139,50 @@ export const formatDuration = (seconds: number | null) => {
 
   return `${minutes}:${remainingSeconds.toString().padStart(2, "0")}`;
 };
+
+export const parseFrameRate = (value?: string | null) => {
+  if (!value || value === "0/0") {
+    return null;
+  }
+
+  const [numerator, denominator] = value.split("/");
+  const numeratorValue = Number.parseFloat(numerator ?? "");
+  const denominatorValue = Number.parseFloat(denominator ?? "");
+
+  if (!Number.isFinite(numeratorValue) || !Number.isFinite(denominatorValue) || denominatorValue === 0) {
+    return null;
+  }
+
+  const frameRate = numeratorValue / denominatorValue;
+  return Number.isFinite(frameRate) && frameRate > 0 ? frameRate : null;
+};
+
+export const clampValue = (value: number, min: number, max: number) => {
+  return Math.min(Math.max(value, min), max);
+};
+
+export const formatPreciseDuration = (seconds: number | null) => {
+  if (seconds == null || Number.isNaN(seconds)) {
+    return "--:--.--";
+  }
+
+  const clamped = Math.max(0, seconds);
+  const wholeSeconds = Math.floor(clamped);
+  const minutes = Math.floor(wholeSeconds / 60);
+  const remainingSeconds = wholeSeconds % 60;
+  const hundredths = Math.floor((clamped - wholeSeconds) * 100);
+
+  return `${minutes}:${remainingSeconds.toString().padStart(2, "0")}.${hundredths.toString().padStart(2, "0")}`;
+};
+
+export const replaceOutputExtension = (path: string, extension: string) => {
+  const normalizedExtension = getPreferredOutputExtension(extension);
+  const lastDot = path.lastIndexOf(".");
+  const lastSlash = Math.max(path.lastIndexOf("/"), path.lastIndexOf("\\"));
+
+  if (lastDot > lastSlash) {
+    return `${path.slice(0, lastDot)}.${normalizedExtension}`;
+  }
+
+  return `${path}.${normalizedExtension}`;
+};

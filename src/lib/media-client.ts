@@ -9,6 +9,7 @@ import type {
   MediaJobRequest,
   MediaToolStatus,
   SelectedFile,
+  WaveformPreview,
 } from "./media-types";
 
 interface RawSelectedFile {
@@ -36,6 +37,10 @@ type BackendMediaJobRequest =
       startSeconds: number;
       endSeconds?: number;
       reencode?: boolean;
+      videoCodec?: string | null;
+      audioCodec?: string | null;
+      extraArgs?: string[];
+      dropVideo?: boolean;
     }
   | {
       jobId: string;
@@ -58,6 +63,7 @@ type BackendMediaJobRequest =
       inputPath: string;
       outputPath: string;
       format: string;
+      audioCodec?: string | null;
       bitrate?: string | null;
     }
   | {
@@ -156,6 +162,10 @@ function toBackendRequest(request: MediaJobRequest): BackendMediaJobRequest {
         workflow: "convert",
         inputPath: request.payload.inputPath,
         outputPath: request.payload.outputPath,
+        videoCodec: request.payload.videoCodec,
+        audioCodec: request.payload.audioCodec,
+        subtitleCodec: request.payload.subtitleCodec,
+        extraArgs: request.payload.extraArgs,
       };
     case "trim":
       return {
@@ -165,7 +175,11 @@ function toBackendRequest(request: MediaJobRequest): BackendMediaJobRequest {
         outputPath: request.payload.outputPath,
         startSeconds: request.payload.startSeconds,
         endSeconds: request.payload.endSeconds,
-        reencode: false,
+        reencode: request.payload.reencode ?? false,
+        videoCodec: request.payload.videoCodec,
+        audioCodec: request.payload.audioCodec,
+        extraArgs: request.payload.extraArgs,
+        dropVideo: request.payload.dropVideo ?? false,
       };
     case "compress":
       return {
@@ -189,6 +203,7 @@ function toBackendRequest(request: MediaJobRequest): BackendMediaJobRequest {
         inputPath: request.payload.inputPath,
         outputPath: request.payload.outputPath,
         format: request.payload.format,
+        audioCodec: request.payload.audioCodec,
         bitrate: request.payload.bitrate,
       };
     case "subtitles":
@@ -230,6 +245,11 @@ export function pickOutputPath(args: PickOutputPathArgs = {}) {
 export function getMediaInfo(path: string) {
   ensureTauriRuntime();
   return invoke<MediaInfo>("get_media_info", { path });
+}
+
+export function getWaveformPreview(path: string, width = 960, height = 120) {
+  ensureTauriRuntime();
+  return invoke<WaveformPreview>("get_waveform_preview", { path, width, height });
 }
 
 export function getMediaToolStatus() {

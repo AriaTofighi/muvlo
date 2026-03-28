@@ -1,6 +1,6 @@
 import { AudioLines, Captions, Film, FileQuestion, ImageIcon, LoaderCircle, RefreshCw, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { FileDropZone } from "@/components/FileDropZone";
 import { formatDuration, formatFileSize, getMediaDurationSeconds } from "@/lib/media-helpers";
 import type { SelectedFile } from "@/lib/media-types";
@@ -45,8 +45,6 @@ export function SourceWorkspaceCard({
   onOpenSource,
   onRemoveSource,
   onDropSource,
-  title = "Source media",
-  description,
   emptyTitle = "Choose a file",
   replaceLabel = "Replace",
 }: SourceWorkspaceCardProps) {
@@ -57,11 +55,7 @@ export function SourceWorkspaceCard({
 
   return (
     <Card>
-      <CardHeader className="pb-4">
-        <CardTitle>{title}</CardTitle>
-        {description && <CardDescription>{description}</CardDescription>}
-      </CardHeader>
-      <CardContent className="pt-0">
+      <CardContent>
         {activeFile ? (
           <div className="space-y-6">
             <div className="flex flex-col gap-4 rounded-xl bg-muted/20 p-4 sm:flex-row sm:items-center sm:justify-between group transition-all duration-200">
@@ -92,7 +86,7 @@ export function SourceWorkspaceCard({
                   {replaceLabel}
                 </Button>
                 {onRemoveSource && (
-                  <Button type="button" variant="ghost" size="icon" onClick={onRemoveSource} className="h-8 w-8 text-muted-foreground hover:text-destructive hover:bg-destructive/5 transition-colors">
+                  <Button type="button" variant="ghost" size="icon" onClick={onRemoveSource} className="h-8 w-8 text-muted-foreground hover:bg-muted hover:text-foreground transition-colors">
                     <Trash2 className="h-4 w-4" />
                   </Button>
                 )}
@@ -126,7 +120,7 @@ export function SourceWorkspaceCard({
             onFilesDrop={onDropSource}
             label={emptyTitle}
             hint={undefined}
-            className="px-6 py-8"
+            className="py-12"
           />
         )}
       </CardContent>

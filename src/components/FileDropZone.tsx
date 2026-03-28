@@ -120,7 +120,7 @@ export function FileDropZone({
     <div
       ref={rootRef}
       className={cn(
-        "group relative flex w-full cursor-pointer flex-col items-center justify-center rounded-2xl bg-muted/10 px-12 py-12 text-center transition-all duration-300",
+        "group relative flex w-full cursor-pointer flex-col items-center justify-center rounded-xl bg-muted/10 px-12 py-12 text-center transition-all duration-300",
         isDragging && "bg-accent/10",
         className
       )}
