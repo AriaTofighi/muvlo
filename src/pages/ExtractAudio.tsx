@@ -158,7 +158,7 @@ export function ExtractAudio() {
         <CardContent className="space-y-4">
           <div className="space-y-4">
             <div className="grid gap-2">
-              <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground/40 pl-1">Target Format</span>
+              <span className="px-0.5 text-[11.5px] font-semibold lowercase leading-none text-muted-foreground">target format</span>
               <FormatPicker value={format} onChange={handleFormatChange} type="audio" />
             </div>
 
@@ -177,19 +177,19 @@ export function ExtractAudio() {
             </div>
           </div>
 
-          <div className="space-y-3 rounded-xl border border-border/10 bg-muted/10 px-[var(--surface-padding)] pt-4 pb-0">
+          <div className="surface-inset space-y-3 pb-0">
             {guidance && <OutputGuidanceContent guidance={guidance} />}
 
             {showAdvanced && (
               <div className="animate-in fade-in slide-in-from-top-2 duration-300 pt-1 pb-4">
                 <div className="grid gap-4 md:grid-cols-2">
                   <div className="grid gap-1.5">
-                    <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground/40">Audio Codec</span>
-                    <Input value={audioCodec} onChange={(event) => setAudioCodec(event.target.value)} placeholder="Auto / libmp3lame / aac" className="bg-transparent border-border/40" />
+                    <span className="px-0.5 text-[11.5px] font-semibold lowercase leading-none text-muted-foreground">audio codec</span>
+                    <Input value={audioCodec} onChange={(event) => setAudioCodec(event.target.value)} placeholder="Auto / libmp3lame / aac" />
                   </div>
                   <div className="grid gap-1.5">
-                    <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground/40">Bitrate kbps</span>
-                    <Input value={audioBitrate} onChange={(event) => setAudioBitrate(event.target.value)} placeholder="Auto" className="bg-transparent border-border/40" />
+                    <span className="px-0.5 text-[11.5px] font-semibold lowercase leading-none text-muted-foreground">bitrate kbps</span>
+                    <Input value={audioBitrate} onChange={(event) => setAudioBitrate(event.target.value)} placeholder="Auto" />
                   </div>
                 </div>
               </div>
@@ -205,9 +205,9 @@ export function ExtractAudio() {
               >
                 <span>Advanced settings</span>
                 {showAdvanced ? (
-                  <ChevronUp size={10} strokeWidth={3} className="opacity-70" />
+                  <ChevronUp size={10} strokeWidth={3} />
                 ) : (
-                  <ChevronDown size={10} strokeWidth={3} className="opacity-70" />
+                  <ChevronDown size={10} strokeWidth={3} />
                 )}
               </Button>
             </div>

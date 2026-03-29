@@ -111,12 +111,12 @@ export function Merge() {
           {activeFile && (
             <div className="surface-inset-compact flex items-center justify-between gap-4">
               <div className="flex items-center gap-3 min-w-0">
-                <div className="flex shrink-0 items-center justify-center rounded-lg bg-background/80 p-2">
+                <div className="flex shrink-0 items-center justify-center rounded-lg bg-background p-2">
                   <FileVideo className="h-4 w-4 text-muted-foreground" />
                 </div>
                 <div className="min-w-0">
                   <p className="font-medium text-sm text-foreground truncate">{activeFile.name}</p>
-                  <p className="text-xs text-muted-foreground/70">Current workspace source</p>
+                  <p className="text-xs text-muted-foreground">Current workspace source</p>
                 </div>
               </div>
               <Button variant="outline" size="sm" onClick={useActiveFileForMerge} className="h-8 shadow-none border-border/50 text-xs">
@@ -126,13 +126,13 @@ export function Merge() {
           )}
 
           {files.length > 0 && (
-            <div className="flex flex-col gap-2 rounded-xl bg-muted/5 p-2">
+            <div className="surface-inset-compact flex flex-col gap-2">
               {files.map((file) => (
-                <div key={file.path} className="surface-inset-compact flex items-center gap-3 bg-background/80 group transition-all">
-                  <GripVertical className="h-4 w-4 text-muted-foreground/40 cursor-grab active:cursor-grabbing" />
+                <div key={file.path} className="surface-inset-compact flex items-center gap-3 bg-background group transition-colors">
+                  <GripVertical className="h-4 w-4 cursor-grab text-muted-foreground active:cursor-grabbing" />
                   <div className="min-w-0 flex-1">
                     <p className="text-sm font-medium truncate">{file.name}</p>
-                    <p className="text-[10px] text-muted-foreground/60 font-mono truncate lowercase">{file.path}</p>
+                    <p className="text-[10px] font-mono text-muted-foreground truncate lowercase">{file.path}</p>
                   </div>
                   <Button variant="ghost" size="icon" onClick={() => removeMergeFile(file.path)} className="h-8 w-8 text-muted-foreground hover:bg-muted hover:text-foreground">
                     <Trash2 className="h-4 w-4" />
@@ -143,7 +143,7 @@ export function Merge() {
                 <button
                   type="button"
                   onClick={clearMergeFiles}
-                  className="px-2.5 py-1 text-[11px] font-bold text-muted-foreground/60 hover:text-foreground lowercase tracking-tight transition-colors"
+                  className="px-2.5 py-1 text-[11px] font-bold text-muted-foreground hover:text-foreground lowercase tracking-tight transition-colors"
                 >
                   clear list
                 </button>

@@ -284,7 +284,7 @@ export function Trim() {
       <Card size="flush" className="overflow-hidden">
         <CardContent>
           <div className="space-y-6 p-[var(--surface-padding)]">
-            <div className="overflow-hidden rounded-xl border bg-muted/20">
+            <div className="overflow-hidden rounded-xl border bg-muted">
               {previewSrc ? (
                 activeFile?.kind === "audio" ? (
                   <div className="space-y-4 p-[var(--surface-padding)]">
@@ -346,7 +346,7 @@ export function Trim() {
               <Button variant="outline" size="sm" onClick={setOutPoint} disabled={!previewSrc} className="h-8 font-semibold">
                 Mark out
               </Button>
-              <div className="ml-auto rounded-full border border-border/40 bg-muted/20 px-3 py-1 text-[10px] font-bold text-muted-foreground tracking-tight">
+              <div className="ml-auto rounded-full border border-border bg-muted px-3 py-1 text-[10px] font-bold text-muted-foreground tracking-tight">
                 frame {currentFrame}
               </div>
             </div>
@@ -354,7 +354,7 @@ export function Trim() {
             <div
               ref={timelineRef}
               onClick={handleTimelineSeek}
-              className="surface-inset relative overflow-hidden bg-card/40"
+              className="surface-inset relative overflow-hidden bg-card"
             >
               <div className="pointer-events-none absolute inset-y-4 rounded-lg bg-accent/10" style={{ left: `${range[0]}%`, right: `${100 - range[1]}%` }} />
               {waveformDataUrl ? (
@@ -378,15 +378,15 @@ export function Trim() {
                 />
               </div>
               <div className="mt-4 flex flex-wrap items-center justify-between gap-3 text-[11px] font-bold text-muted-foreground lowercase">
-                <span className="bg-muted/30 px-2 py-0.5 rounded">in {formatPreciseDuration(startSeconds)}</span>
+                <span className="rounded bg-muted px-2 py-0.5">in {formatPreciseDuration(startSeconds)}</span>
                 <span className="text-foreground font-bold">{formatDuration(clipDuration)} selection</span>
-                <span className="bg-muted/30 px-2 py-0.5 rounded">out {formatPreciseDuration(endSeconds)}</span>
+                <span className="rounded bg-muted px-2 py-0.5">out {formatPreciseDuration(endSeconds)}</span>
               </div>
             </div>
           </div>
 
           {guidance && (
-            <div className="border-t border-border/10 bg-muted/5 p-[var(--surface-padding)]">
+            <div className="border-t border-border bg-muted/50 p-[var(--surface-padding)]">
               <OutputGuidanceContent guidance={guidance} />
             </div>
           )}
@@ -405,25 +405,25 @@ export function Trim() {
           </div>
 
           {queuedClips.length === 0 ? (
-            <div className="rounded-xl border border-dashed border-border/40 px-4 py-8 text-sm text-muted-foreground text-center">No clips queued. Add current selection to begin.</div>
+            <div className="rounded-xl border border-dashed border-border px-4 py-8 text-center text-sm text-muted-foreground">No clips queued. Add current selection to begin.</div>
           ) : (
             <div className="space-y-3">
               {queuedClips.map((clip) => {
                 const job = clip.jobId ? queueJobs.get(clip.jobId) : null;
 
                 return (
-                  <div key={clip.id} className="surface-inset flex flex-col gap-3 bg-muted/10 lg:flex-row lg:items-center lg:justify-between transition-all hover:bg-muted/20 hover:border-border/60">
+                  <div key={clip.id} className="surface-inset flex flex-col gap-3 transition-colors hover:border-border hover:bg-muted lg:flex-row lg:items-center lg:justify-between">
                     <div className="min-w-0">
                       <div className="flex flex-wrap items-center gap-2">
                         <p className="font-bold text-sm text-foreground">{clip.label}</p>
-                        <span className="text-[10px] font-bold bg-muted/60 px-2 py-0.5 rounded text-muted-foreground/90 lowercase tracking-tight">
+                        <span className="rounded bg-muted px-2 py-0.5 text-[10px] font-bold lowercase tracking-tight text-muted-foreground">
                           {formatPreciseDuration(clip.startSeconds)} to {formatPreciseDuration(clip.endSeconds)}
                         </span>
                       </div>
-                      <p className="truncate text-[10px] text-muted-foreground/60 mt-0.8 lowercase tracking-tight">{clip.outputPath}</p>
+                      <p className="mt-0.8 truncate text-[10px] lowercase tracking-tight text-muted-foreground">{clip.outputPath}</p>
                       {job && (
                         <div className="mt-4 space-y-2">
-                          <div className="flex justify-between text-[11px] font-bold lowercase text-muted-foreground/60 tracking-tight">
+                          <div className="flex justify-between text-[11px] font-bold lowercase tracking-tight text-muted-foreground">
                             <span>{job.phase?.toLowerCase() ?? "queued"}</span>
                             <span>{Math.round(job.progress)}%</span>
                           </div>

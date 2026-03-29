@@ -114,8 +114,8 @@ export function Home() {
       {recentFiles.length > 0 && (
         <Card>
           <CardContent className="space-y-4">
-            <div className="flex items-center gap-2 text-sm font-semibold text-muted-foreground">
-              <Clock className="h-4 w-4" />
+            <div className="flex items-center gap-2 text-sm font-medium text-foreground">
+              <Clock className="h-4 w-4 text-muted-foreground" />
               Recent Imports
             </div>
             <div className="grid gap-2 sm:grid-cols-2">

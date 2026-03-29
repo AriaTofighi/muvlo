@@ -68,21 +68,21 @@ export function JobQueue() {
         <div className="max-h-[min(56dvh,36rem)] overflow-y-auto px-4 pt-1">
           <div className="space-y-3 pb-1">
             {jobs.length === 0 ? (
-              <Card size="sm" className="bg-card/60">
+              <Card size="sm">
                 <CardContent>
-                  <span className="text-sm font-medium text-foreground/75">Queue is empty</span>
+                  <span className="text-sm font-medium text-muted-foreground">Queue is empty</span>
                 </CardContent>
               </Card>
             ) : (
               jobs.map((job) => (
-                <Card key={job.id} size="sm" className="bg-card/60 transition-all hover:bg-card/80">
+                <Card key={job.id} size="sm">
                   <CardContent className="space-y-3">
                     <div className="flex items-center justify-between gap-4">
                       <div className="flex flex-col gap-1.5 overflow-hidden">
-                        <span className="truncate text-sm font-medium text-foreground/90">{job.fileName}</span>
+                        <span className="truncate text-sm font-medium text-foreground">{job.fileName}</span>
                         <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                        <span className="capitalize font-medium text-foreground/70">{job.workflow}</span>
-                        <span className="text-muted-foreground/40">&middot;</span>
+                        <span className="capitalize font-medium text-muted-foreground">{job.workflow}</span>
+                        <span>&middot;</span>
                         <span className="flex items-center gap-1.5 capitalize">
                           {job.status === "completed" && (
                             <Check className="h-4 w-4 text-success" strokeWidth={2.5} />
@@ -97,24 +97,24 @@ export function JobQueue() {
                           </span>
                           {job.phase && job.phase.toLowerCase() !== job.status.toLowerCase() && (
                             <>
-                              <span className="text-muted-foreground/40">&middot;</span>
-                              <span className="text-muted-foreground/80">{job.phase}</span>
+                              <span>&middot;</span>
+                              <span>{job.phase}</span>
                             </>
                           )}
                       </div>
                       {job.status === "failed" && job.error && (
                         <details className="mt-1 group">
-                          <summary className="list-none text-xs font-medium text-destructive/85 cursor-pointer select-none transition-colors hover:text-destructive">
+                          <summary className="list-none cursor-pointer select-none text-xs font-medium text-destructive transition-colors hover:underline">
                             View error details
                           </summary>
-                          <div className="mt-2 rounded-lg border border-destructive/15 bg-destructive/5 px-3 py-2 text-xs leading-relaxed whitespace-pre-wrap break-words text-destructive/85">
+                          <div className="mt-2 rounded-lg border border-destructive/20 bg-destructive/5 px-3 py-2 text-xs leading-relaxed whitespace-pre-wrap break-words text-destructive">
                             {job.error}
                           </div>
                         </details>
                       )}
                     </div>
 
-                      <div className="flex shrink-0 items-center gap-1 opacity-80 transition-opacity hover:opacity-100">
+                      <div className="flex shrink-0 items-center gap-1">
                         {job.status === "idle" && (
                           <Button
                             variant="ghost"
@@ -163,7 +163,7 @@ export function JobQueue() {
                           size="icon"
                           className={cn(
                             "h-8 w-8 hover:bg-muted hover:text-foreground",
-                            job.status === "failed" ? "text-destructive/70 hover:bg-destructive/10 hover:text-destructive" : "text-muted-foreground",
+                            job.status === "failed" ? "text-destructive hover:bg-destructive/10 hover:text-destructive" : "text-muted-foreground",
                           )}
                           onClick={() => removeJob(job.id)}
                           title="Remove"
