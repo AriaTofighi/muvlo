@@ -13,6 +13,7 @@ interface FileDropZoneProps {
   className?: string;
   label?: string;
   hint?: string;
+  size?: "default" | "compact";
 }
 
 export function FileDropZone({
@@ -23,6 +24,7 @@ export function FileDropZone({
   className,
   label = "Drop a media file here or click to browse",
   hint,
+  size = "default",
 }: FileDropZoneProps) {
   const [isDragging, setIsDragging] = useState(false);
   const inputId = useId();
@@ -120,7 +122,8 @@ export function FileDropZone({
     <div
       ref={rootRef}
       className={cn(
-        "group relative flex w-full cursor-pointer flex-col items-center justify-center rounded-xl bg-muted/10 px-12 py-12 text-center transition-all duration-300",
+        "group relative flex w-full cursor-pointer flex-col items-center justify-center rounded-xl bg-muted/10 text-center transition-all duration-300",
+        size === "compact" ? "px-[var(--surface-padding)] py-6" : "px-[var(--surface-padding)] py-10",
         isDragging && "bg-accent/10",
         className
       )}

@@ -146,3 +146,9 @@ export interface JobCompleteEvent {
   outputPath?: string | null;
   error?: string | null;
 }
+
+export type SimulatedFailureScenario =
+  | "container_mismatch"
+  | "encoder_unavailable"
+  | "permission_denied"
+  | "corrupt_input";

@@ -9,6 +9,7 @@ import type {
   MediaJobRequest,
   MediaToolStatus,
   SelectedFile,
+  SimulatedFailureScenario,
   WaveformPreview,
 } from "./media-types";
 
@@ -226,6 +227,11 @@ export function startMediaJob(request: MediaJobRequest) {
 export function cancelMediaJob(jobId: string) {
   ensureTauriRuntime();
   return invoke<void>("cancel_media_job", { jobId });
+}
+
+export function simulateJobFailure(jobId: string, scenario: SimulatedFailureScenario) {
+  ensureTauriRuntime();
+  return invoke<void>("simulate_job_failure", { jobId, scenario });
 }
 
 export function listenToJobProgress(handler: (event: JobProgressEvent) => void): Promise<UnlistenFn> {

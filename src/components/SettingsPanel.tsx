@@ -11,10 +11,46 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { SidebarMenuButton } from "@/components/ui/sidebar";
-import { Settings } from "lucide-react";
+import { ChevronDown, Settings } from "lucide-react";
 import { useTheme } from "next-themes";
 import { toast } from "sonner";
 import { useEffect } from "react";
+import { simulateJobFailure } from "@/lib/media-client";
+import type { SimulatedFailureScenario } from "@/lib/media-types";
+import { useJobStore } from "@/stores/jobStore";
+
+const THEME_ITEMS = [
+  { value: "light", label: "Light" },
+  { value: "dark", label: "Dark" },
+  { value: "system", label: "System" },
+] as const;
+
+const FAILURE_SCENARIOS: Array<{
+  value: SimulatedFailureScenario;
+  label: string;
+  fileName: string;
+}> = [
+  {
+    value: "container_mismatch",
+    label: "Container mismatch",
+    fileName: "demo-container-mismatch.mkv",
+  },
+  {
+    value: "encoder_unavailable",
+    label: "Encoder unavailable",
+    fileName: "demo-encoder-missing.mov",
+  },
+  {
+    value: "permission_denied",
+    label: "Permission denied",
+    fileName: "demo-permission-error.mp4",
+  },
+  {
+    value: "corrupt_input",
+    label: "Corrupt input",
+    fileName: "demo-corrupt-input.webm",
+  },
+] as const;
 
 export function SettingsPanel() {
   const {
@@ -23,7 +59,9 @@ export function SettingsPanel() {
     theme,
     setTheme: setStoredTheme,
   } = useSettingsStore();
+  const enqueueJob = useJobStore((state) => state.enqueueJob);
   const { theme: activeTheme, setTheme } = useTheme();
+  const isDev = import.meta.env.DEV;
 
   useEffect(() => {
     if (!activeTheme || activeTheme === theme) {
@@ -40,6 +78,33 @@ export function SettingsPanel() {
 
   const handleSave = () => {
     toast.success("Settings saved successfully.");
+  };
+
+  const handleSimulateFailure = async (scenario: SimulatedFailureScenario, fileName: string) => {
+    const jobId = crypto.randomUUID();
+
+    enqueueJob({
+      id: jobId,
+      fileName,
+      workflow: "Convert",
+      request: {
+        jobId,
+        payload: {
+          kind: "convert",
+          inputPath: `C:\\simulated\\${fileName}`,
+          outputPath: `C:\\simulated\\${fileName}.out`,
+          format: "mp4",
+          overwrite: true,
+        },
+      },
+    });
+
+    try {
+      await simulateJobFailure(jobId, scenario);
+      toast.success("Simulated failure queued.");
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Failed to simulate job error.");
+    }
   };
 
   return (
@@ -84,7 +149,11 @@ export function SettingsPanel() {
 
           <div className="space-y-2">
             <Label>Appearance</Label>
-            <Select value={theme} onValueChange={(value) => handleThemeChange(value as "system" | "dark" | "light")}>
+            <Select
+              value={theme}
+              items={THEME_ITEMS}
+              onValueChange={(value) => handleThemeChange(value as "system" | "dark" | "light")}
+            >
               <SelectTrigger>
                 <SelectValue placeholder="Select theme" />
               </SelectTrigger>
@@ -95,6 +164,31 @@ export function SettingsPanel() {
               </SelectContent>
             </Select>
           </div>
+
+          {isDev && (
+            <details className="group">
+              <summary className="flex cursor-pointer list-none items-center justify-between gap-3 rounded-lg py-1.5 select-none text-sm font-medium text-foreground">
+                <span>Development</span>
+                <ChevronDown className="h-4 w-4 text-muted-foreground transition-transform group-open:rotate-180" />
+              </summary>
+              <div className="mt-3 space-y-3 pl-0.5">
+                <Label>Debug Error Simulation</Label>
+                <div className="grid gap-2 sm:grid-cols-2">
+                  {FAILURE_SCENARIOS.map((scenario) => (
+                    <Button
+                      key={scenario.value}
+                      type="button"
+                      variant="outline"
+                      className="justify-start text-left"
+                      onClick={() => void handleSimulateFailure(scenario.value, scenario.fileName)}
+                    >
+                      {scenario.label}
+                    </Button>
+                  ))}
+                </div>
+              </div>
+            </details>
+          )}
         </div>
         <div className="flex justify-end">
           <Button onClick={handleSave}>Save Changes</Button>

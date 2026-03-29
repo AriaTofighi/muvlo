@@ -34,9 +34,20 @@ export function FormatPicker({
   const resolvedVideoFormats = videoFormats ?? FORMATS.video;
   const resolvedAudioFormats = audioFormats ?? FORMATS.audio;
   const resolvedImageFormats = imageFormats ?? FORMATS.image;
+  const selectItems = [
+    ...(type === "all" || type === "video"
+      ? resolvedVideoFormats.map((fmt) => ({ value: fmt, label: `.${fmt}` }))
+      : []),
+    ...(type === "all" || type === "audio"
+      ? resolvedAudioFormats.map((fmt) => ({ value: fmt, label: `.${fmt}` }))
+      : []),
+    ...(type === "all" || type === "image"
+      ? resolvedImageFormats.map((fmt) => ({ value: fmt, label: `.${fmt}` }))
+      : []),
+  ];
 
   return (
-    <Select value={value} onValueChange={(val) => val && onChange(val)}>
+    <Select value={value} items={selectItems} onValueChange={(val) => val && onChange(val)}>
       <SelectTrigger className="w-[180px]">
         <SelectValue placeholder="Select output format" />
       </SelectTrigger>

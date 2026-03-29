@@ -39,13 +39,13 @@ export function Sidebar() {
 
   return (
     <ShadcnSidebar variant="sidebar" collapsible="icon">
-      <SidebarHeader className="px-3 pt-4 pb-3 group-data-[collapsible=icon]:px-2 group-data-[collapsible=icon]:pt-3 group-data-[collapsible=icon]:pb-2">
+      <SidebarHeader className="px-2 pt-4 pb-3 group-data-[collapsible=icon]:px-2 group-data-[collapsible=icon]:pt-3 group-data-[collapsible=icon]:pb-2">
         <div className={collapsed ? "flex flex-col items-center gap-2" : "flex items-center justify-between"}>
           <Link
             to="/"
             className={collapsed ? "flex items-center justify-center opacity-90 transition-opacity hover:opacity-100" : "flex items-center opacity-80 transition-opacity hover:opacity-100"}
           >
-            <MuvloMark key="hmr-flush" className={collapsed ? "size-6" : "size-7"} />
+            <MuvloMark key="hmr-flush" className={collapsed ? "size-6" : "size-6.5"} />
           </Link>
           <SidebarTrigger className="h-8 w-8 opacity-60 transition-opacity hover:opacity-100 group-data-[collapsible=icon]:h-7 group-data-[collapsible=icon]:w-7" />
         </div>

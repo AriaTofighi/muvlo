@@ -46,16 +46,16 @@ export function Home() {
   };
 
   const workflows = [
-    { title: "Convert", desc: "Change formats", path: "/convert", icon: FileVideo },
-    { title: "Compress", desc: "Reduce file size", path: "/compress", icon: Minimize },
-    { title: "Trim", desc: "Cut video length", path: "/trim", icon: Scissors },
-    { title: "Merge", desc: "Join multiple files", path: "/merge", icon: Combine },
-    { title: "Extract Audio", desc: "Save track to MP3", path: "/extract-audio", icon: Music },
-    { title: "Subtitles", desc: "Add or burn subs", path: "/subtitles", icon: Type },
+    { title: "Convert", path: "/convert", icon: FileVideo },
+    { title: "Compress", path: "/compress", icon: Minimize },
+    { title: "Trim", path: "/trim", icon: Scissors },
+    { title: "Merge", path: "/merge", icon: Combine },
+    { title: "Extract Audio", path: "/extract-audio", icon: Music },
+    { title: "Subtitles", path: "/subtitles", icon: Type },
   ];
 
   return (
-    <div className="mx-auto max-w-3xl space-y-6 animate-in fade-in duration-500">
+    <div className="mx-auto max-w-3xl space-y-6 animate-in fade-in duration-500 transform-gpu translate-z-0">
       {!tauriReady && (
         <Card className="border-destructive/50 bg-destructive/5">
           <CardContent className="space-y-1">
@@ -68,17 +68,22 @@ export function Home() {
         </Card>
       )}
 
-      <Card>
-        <CardContent>
+      <Card size="flush">
+        <CardContent className={activeFile ? "p-[var(--surface-padding-comfortable)]" : undefined}>
           {activeFile ? (
-            <div className="flex items-center justify-between rounded-xl bg-muted/20 p-4">
+            <div className="flex items-center justify-between gap-4">
               <div className="flex items-center gap-4 min-w-0">
-                <div className="flex shrink-0 items-center justify-center rounded-lg bg-background/80 p-2.5">
-                  <FileVideo className="h-4 w-4 text-muted-foreground" />
-                </div>
                 <div className="min-w-0">
-                  <p className="font-medium text-foreground truncate">{activeFile.name}</p>
-                  <p className="text-xs text-muted-foreground/70 font-mono mt-0.5 truncate lowercase">{activeFile.path}</p>
+                  <div className="flex items-center gap-2">
+                    <p className="truncate font-extrabold text-foreground text-sm">{activeFile.name}</p>
+                    <span className="text-[10px] text-muted-foreground/60 font-bold px-1.5 py-0.5 rounded bg-muted/60 uppercase tracking-wider">
+                      {activeFile.extension?.replace(".", "") ?? "FILE"}
+                    </span>
+                  </div>
+                  <p className="truncate text-[11px] text-muted-foreground/60 mt-0.5 lowercase tracking-tight">{activeFile.path}</p>
+                  {activeFile.infoStatus === "error" && (
+                    <p className="text-xs text-destructive mt-1 font-medium italic">{activeFile.infoError ?? "Metadata unavailable"}</p>
+                  )}
                 </div>
               </div>
               <div className="flex items-center gap-2">
@@ -101,7 +106,6 @@ export function Home() {
               onFilesDrop={(files) => void handleDroppedSource(files)}
               label="Choose a file to start"
               hint={tauriReady ? undefined : "Tauri runtime not detected. Launch with `npm run tauri dev` instead of `npm run dev`."}
-              className="py-12"
             />
           )}
         </CardContent>
@@ -110,7 +114,7 @@ export function Home() {
       {recentFiles.length > 0 && (
         <Card>
           <CardContent className="space-y-4">
-            <div className="flex items-center gap-2 text-sm font-semibold text-muted-foreground/80">
+            <div className="flex items-center gap-2 text-sm font-semibold text-muted-foreground">
               <Clock className="h-4 w-4" />
               Recent Imports
             </div>
@@ -118,15 +122,15 @@ export function Home() {
               {recentFiles.slice(0, 4).map((file) => (
                 <button
                   key={file.path}
-                  className="flex items-center justify-between gap-4 rounded-xl border border-border/50 bg-card/50 p-3 text-left transition hover:border-accent/40 hover:bg-accent/5 group"
+                  className="surface-inset-compact flex items-center justify-between gap-4 text-left transition hover:border-accent/40 hover:bg-accent/5 group"
                   onClick={() => void selectActiveFile(file).then(() => navigate("/convert"))}
                   type="button"
                 >
                   <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-medium group-hover:text-accent transition-colors">{file.name}</p>
-                    <p className="text-[10px] text-muted-foreground/60 truncate font-mono lowercase">{file.path}</p>
+                    <p className="truncate text-sm font-semibold text-muted-foreground group-hover:text-accent transition-colors">{file.name}</p>
+                    <p className="text-[10px] text-muted-foreground/60 truncate mt-0.5 lowercase tracking-tight">{file.path}</p>
                   </div>
-                  <span className="shrink-0 text-[10px] font-semibold text-muted-foreground/50 border rounded px-1.5 py-0.5 bg-muted/30">
+                  <span className="shrink-0 text-[10px] font-bold text-muted-foreground border border-border/80 rounded px-2 py-0.5 bg-muted/20">
                     {formatFileSize(file.size)}
                   </span>
                 </button>
@@ -136,14 +140,15 @@ export function Home() {
         </Card>
       )}
 
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
         {workflows.map((workflow) => (
-          <Link key={workflow.path} to={workflow.path}>
-            <Card className="h-full transition hover:border-accent/40 hover:bg-accent/5 group">
-              <CardContent className="flex flex-col items-start px-5 py-2">
-                <workflow.icon className="mb-3 h-6 w-6 text-muted-foreground group-hover:text-accent transition-colors" />
-                <p className="font-semibold text-foreground group-hover:text-accent transition-colors">{workflow.title}</p>
-                <p className="text-sm text-muted-foreground">{workflow.desc}</p>
+          <Link key={workflow.path} to={workflow.path} className="group">
+            <Card size="sm" className="h-full border border-border/40 transition hover:border-accent/30 hover:bg-accent/1">
+              <CardContent className="flex items-center gap-3">
+                <workflow.icon className="h-4 w-4 text-muted-foreground group-hover:text-accent transition-colors" />
+                <p className="text-sm font-bold text-foreground group-hover:text-accent transition-colors">
+                  {workflow.title}
+                </p>
               </CardContent>
             </Card>
           </Link>

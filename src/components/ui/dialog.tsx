@@ -2,6 +2,7 @@ import * as React from "react"
 import { Dialog as DialogPrimitive } from "@base-ui/react/dialog"
 
 import { cn } from "@/lib/utils"
+import { useOverlayScrollbarCompensation } from "@/hooks/use-overlay-scrollbar-compensation"
 import { Button } from "@/components/ui/button"
 import { XIcon } from "lucide-react"
 
@@ -45,6 +46,8 @@ function DialogContent({
 }: DialogPrimitive.Popup.Props & {
   showCloseButton?: boolean
 }) {
+  useOverlayScrollbarCompensation()
+
   return (
     <DialogPortal>
       <DialogOverlay />

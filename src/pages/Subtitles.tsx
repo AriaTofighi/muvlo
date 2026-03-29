@@ -5,23 +5,28 @@ import { FileDropZone } from "@/components/FileDropZone";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { SourceWorkspaceCard } from "@/components/workspace/SourceWorkspaceCard";
-import { Progress } from "@/components/ui/progress";
 import { Separator } from "@/components/ui/separator";
-import { Folder, Type, Play, Save, Square, Trash2 } from "lucide-react";
+import { JobStatusCard } from "@/components/jobs/JobStatusCard";
+import { Type, Play, Save, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { useSourceFileActions } from "@/hooks/useSourceFileActions";
 import { useJobStore } from "@/stores/jobStore";
 import { useWorkspaceStore } from "@/stores/workspaceStore";
-import { pickInputFiles, pickOutputPath, revealInExplorer } from "@/lib/media-client";
 import { SUBTITLE_FILTERS, VIDEO_FILTERS, buildDefaultOutputPath, buildSuggestedOutputName, normalizeWorkflowOutputPath } from "@/lib/media-helpers";
+import { pickInputFiles, pickOutputPath } from "@/lib/media-client";
 import type { MediaJobRequest, SelectedFile } from "@/lib/media-types";
+
+const SUBTITLE_MODE_ITEMS = [
+  { value: "soft", label: "Soft Subtitles (toggleable track)" },
+  { value: "hard", label: "Hardcode (burn into video)" },
+] as const;
 
 export function Subtitles() {
   const activeFile = useWorkspaceStore((state) => state.activeFile);
   const subtitleFile = useWorkspaceStore((state) => state.subtitleFile);
   const setSubtitleFile = useWorkspaceStore((state) => state.setSubtitleFile);
   const clearSubtitleFile = useWorkspaceStore((state) => state.clearSubtitleFile);
-  const { jobs, enqueueJob, startJob } = useJobStore();
+  const { jobs, enqueueJob, startJob, cancelJob } = useJobStore();
   const { openSourceFile } = useSourceFileActions();
   const [mode, setMode] = useState("soft");
   const [outputPath, setOutputPath] = useState("");
@@ -111,15 +116,6 @@ export function Subtitles() {
     toast.success(`Started ${mode === "soft" ? "soft subtitle" : "burn-in subtitle"} job`);
   };
 
-  const cancelSubtitleJob = async () => {
-    if (!currentJob) {
-      return;
-    }
-
-    await useJobStore.getState().cancelJob(currentJob.id);
-    toast("Subtitle job cancelled");
-  };
-
   const handleDroppedSource = async (files: SelectedFile[]) => {
     const sourceFile = files.find((file) => file.kind === "video");
     if (!sourceFile) {
@@ -142,7 +138,7 @@ export function Subtitles() {
   };
 
   return (
-    <div className="mx-auto max-w-3xl space-y-6 animate-in fade-in duration-500">
+    <div className="mx-auto max-w-3xl space-y-6 animate-in fade-in duration-500 transform-gpu translate-z-0">
       <div className="mb-6">
         <h2 className="text-3xl font-bold tracking-tight">Add Subtitles</h2>
       </div>
@@ -159,10 +155,10 @@ export function Subtitles() {
         title="Source video"
       />
 
-      <Card>
+      <Card size="lg">
         <CardContent>
           {subtitleFile ? (
-            <div className="flex items-center gap-3 rounded-xl bg-muted/20 p-4">
+            <div className="surface-inset flex items-center gap-3">
               <div className="flex shrink-0 items-center justify-center rounded-lg bg-background/80 p-2">
                 <Type className="h-4 w-4 text-muted-foreground" />
               </div>
@@ -184,15 +180,15 @@ export function Subtitles() {
               onFilesDrop={(files) => void handleDroppedSubtitle(files)}
               label="Choose a subtitle file"
               hint={undefined}
-              className="py-5"
+              size="compact"
             />
           )}
         </CardContent>
       </Card>
 
-      <Card>
-        <CardContent className="space-y-4">
-          <Select value={mode} onValueChange={(value) => value && setMode(value)}>
+      <Card size="lg">
+        <CardContent className="space-y-5">
+          <Select value={mode} items={SUBTITLE_MODE_ITEMS} onValueChange={(value) => value && setMode(value)}>
             <SelectTrigger className="w-full sm:w-[300px]">
               <SelectValue />
             </SelectTrigger>
@@ -202,59 +198,34 @@ export function Subtitles() {
             </SelectContent>
           </Select>
 
-          <Separator className="my-1" />
+          <Separator />
 
-          <div className="grid gap-2 pt-3">
-            <span className="text-sm font-medium">Output Path</span>
+          <div className="grid gap-2">
             <div className="flex flex-col gap-3 sm:flex-row">
               <Input value={outputPath} onChange={(event) => setOutputPath(event.target.value)} placeholder="Choose where to save the subtitled video" />
-              <Button variant="secondary" onClick={() => void chooseOutput()} disabled={!activeFile}>
-                <Save className="mr-2 h-4 w-4" /> Choose
+              <Button variant="outline" onClick={() => void chooseOutput()} disabled={!activeFile} className="shrink-0 font-medium h-10 gap-2.5 px-5 border-border/50 shadow-none">
+                <Save className="h-4 w-4" /> Choose
               </Button>
             </div>
           </div>
         </CardContent>
       </Card>
 
-      {currentJob?.status === "running" ? (
-        <Card>
-          <CardContent className="pt-6 space-y-4">
-            <div className="flex justify-between text-sm">
-              <span>{currentJob.phase ?? "Adding subtitles"}...</span>
-              <span className="font-mono">{Math.round(currentJob.progress)}%</span>
-            </div>
-            <Progress value={currentJob.progress} className="h-2" />
-            <div className="flex justify-end">
-              <Button variant="destructive" onClick={() => void cancelSubtitleJob()}>
-                <Square className="mr-2 h-4 w-4" /> Cancel
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-      ) : currentJob?.status === "completed" ? (
-        <Card className="bg-success/5">
-          <CardContent>
-            <div className="flex items-center justify-between gap-4">
-              <div className="min-w-0">
-                <p className="font-medium text-success">Subtitle job completed</p>
-                <p className="truncate text-sm text-muted-foreground">{currentJob.outputPath ?? outputPath}</p>
-              </div>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => void revealInExplorer(currentJob.outputPath ?? outputPath)}
-                className="shrink-0 border-success/20 hover:border-success/40 hover:bg-success/5"
-              >
-                <Folder className="mr-2 h-4 w-4" /> Open Folder
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-      ) : null}
+      {currentJob && (
+        <JobStatusCard
+          job={currentJob}
+          outputPath={outputPath}
+          onCancel={cancelJob}
+          labels={{
+            running: mode === "soft" ? "Adding subtitles" : "Burning subtitles",
+            completed: "Subtitle job completed",
+          }}
+        />
+      )}
 
       <div className="flex justify-end">
-        <Button size="lg" disabled={!activeFile || !subtitleFile || !outputPath} onClick={() => void startSubtitleJob()}>
-          <Play className="mr-2 h-4 w-4" /> Apply Subtitles
+        <Button size="lg" disabled={!activeFile || !subtitleFile || !outputPath} onClick={() => void startSubtitleJob()} className="h-10 gap-2.5 px-5 font-semibold">
+          <Play className="h-4 w-4" /> Apply Subtitles
         </Button>
       </div>
     </div>

@@ -18,6 +18,7 @@ pub fn run() {
             ffmpeg::get_media_tool_status,
             ffmpeg::start_media_job,
             ffmpeg::cancel_media_job,
+            ffmpeg::simulate_job_failure,
             probe::get_media_info,
             probe::get_waveform_preview,
             probe::get_ffprobe_available

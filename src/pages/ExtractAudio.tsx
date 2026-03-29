@@ -1,15 +1,15 @@
 import { useEffect, useMemo, useState } from "react";
-import { ChevronDown, ChevronUp, Folder, Play, Save, Square } from "lucide-react";
+import { ChevronDown, ChevronUp, Play, Save } from "lucide-react";
 import { toast } from "sonner";
-import { OutputGuidanceCard } from "@/components/export/OutputGuidanceCard";
+import { OutputGuidanceContent } from "@/components/export/OutputGuidanceContent";
+import { JobStatusCard } from "@/components/jobs/JobStatusCard";
 import { SourceWorkspaceCard } from "@/components/workspace/SourceWorkspaceCard";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Progress } from "@/components/ui/progress";
 import { FormatPicker } from "@/components/FormatPicker";
 import { VIDEO_AND_AUDIO_FILTERS, buildDefaultOutputPath, buildSuggestedOutputName, normalizeWorkflowOutputPath } from "@/lib/media-helpers";
-import { pickOutputPath, revealInExplorer } from "@/lib/media-client";
+import { pickOutputPath } from "@/lib/media-client";
 import type { MediaJobRequest, SelectedFile } from "@/lib/media-types";
 import { buildOutputGuidance } from "@/lib/output-guidance";
 import { useSourceFileActions } from "@/hooks/useSourceFileActions";
@@ -18,7 +18,7 @@ import { useWorkspaceStore } from "@/stores/workspaceStore";
 
 export function ExtractAudio() {
   const activeFile = useWorkspaceStore((state) => state.activeFile);
-  const { jobs, enqueueJob, startJob } = useJobStore();
+  const { jobs, enqueueJob, startJob, cancelJob } = useJobStore();
   const { openSourceFile } = useSourceFileActions();
   const [format, setFormat] = useState("mp3");
   const [outputPath, setOutputPath] = useState("");
@@ -127,15 +127,6 @@ export function ExtractAudio() {
     toast.success(`Started audio extraction to .${format}`);
   };
 
-  const cancelExtraction = async () => {
-    if (!currentJob) {
-      return;
-    }
-
-    await useJobStore.getState().cancelJob(currentJob.id);
-    toast("Extraction cancelled");
-  };
-
   const handleDroppedSource = async (files: SelectedFile[]) => {
     const sourceFile = files.find((file) => file.kind === "video" || file.kind === "audio");
     if (!sourceFile) {
@@ -147,7 +138,7 @@ export function ExtractAudio() {
   };
 
   return (
-    <div className="mx-auto max-w-3xl space-y-6 animate-in fade-in duration-500">
+    <div className="mx-auto max-w-3xl space-y-6 animate-in fade-in duration-500 transform-gpu translate-z-0">
       <div className="mb-6">
         <h2 className="text-3xl font-bold tracking-tight">Extract Audio</h2>
       </div>
@@ -163,123 +154,82 @@ export function ExtractAudio() {
         onDropSource={(files) => void handleDroppedSource(files)}
       />
 
-      <Card>
-        <CardContent className="space-y-5">
-          <div className="grid gap-4">
+      <Card size="lg" className="relative overflow-visible">
+        <CardContent className="space-y-4">
+          <div className="space-y-4">
             <div className="grid gap-2">
-              <span className="text-sm font-medium">Output format</span>
+              <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground/40 pl-1">Target Format</span>
               <FormatPicker value={format} onChange={handleFormatChange} type="audio" />
             </div>
-          </div>
 
-          <div className="flex items-center gap-4 pt-1">
-            <div className="flex-1 h-px bg-border/40" />
-            <button
-              type="button"
-              onClick={() => setShowAdvanced((value) => !value)}
-              style={{
-                display: "inline-flex",
-                alignItems: "center",
-                gap: "0.35rem",
-                padding: "0.15rem 0.65rem",
-                borderRadius: "9999px",
-                background: "transparent",
-                border: "1px solid var(--border)",
-                color: "var(--muted-foreground)",
-                fontSize: "0.675rem",
-                fontWeight: 600,
-                textTransform: "uppercase",
-                letterSpacing: "0.05em",
-                cursor: "pointer",
-                transition: "all 150ms",
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.background = "var(--muted)";
-                e.currentTarget.style.color = "var(--foreground)";
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.background = "transparent";
-                e.currentTarget.style.color = "var(--muted-foreground)";
-              }}
-            >
-              <span>Advanced settings</span>
-              {showAdvanced ? (
-                <ChevronUp size={11} strokeWidth={2.5} className="opacity-80" />
-              ) : (
-                <ChevronDown size={11} strokeWidth={2.5} className="opacity-80" />
-              )}
-            </button>
-            <div className="flex-1 h-px bg-border/40" />
-          </div>
-
-          {showAdvanced && (
-            <div className="rounded-xl border bg-muted/10 p-4">
-              <div className="grid gap-3 md:grid-cols-2">
-                <div className="grid gap-2">
-                  <span className="text-sm font-medium">Audio codec</span>
-                  <Input value={audioCodec} onChange={(event) => setAudioCodec(event.target.value)} placeholder="Auto / libmp3lame / aac" />
-                </div>
-                <div className="grid gap-2">
-                  <span className="text-sm font-medium">Audio bitrate kbps</span>
-                  <Input value={audioBitrate} onChange={(event) => setAudioBitrate(event.target.value)} placeholder="Auto" />
-                </div>
+            <div className="grid gap-2">
+              <div className="flex flex-col gap-3 sm:flex-row">
+                <Input
+                  value={outputPath}
+                  onChange={(event) => setOutputPath(event.target.value)}
+                  placeholder="Choose where to save the extracted audio"
+                  className="flex-1 font-medium placeholder:font-normal h-10"
+                />
+                <Button variant="outline" onClick={() => void chooseOutput()} disabled={!activeFile} className="shrink-0 font-medium h-10 gap-2.5 px-5 border-border/50 shadow-none">
+                  <Save className="h-4 w-4" /> Choose
+                </Button>
               </div>
             </div>
-          )}
+          </div>
 
-          <div className="grid gap-2 pt-2 border-t border-border/20">
-            <span className="text-sm font-medium">Output path</span>
-            <div className="flex flex-col gap-3 sm:flex-row">
-              <Input value={outputPath} onChange={(event) => setOutputPath(event.target.value)} placeholder="Choose where to save the extracted audio" />
-              <Button variant="secondary" onClick={() => void chooseOutput()} disabled={!activeFile}>
-                <Save className="mr-2 h-4 w-4" /> Choose
+          <div className="space-y-3 rounded-xl border border-border/10 bg-muted/10 px-[var(--surface-padding)] pt-4 pb-0">
+            {guidance && <OutputGuidanceContent guidance={guidance} />}
+
+            {showAdvanced && (
+              <div className="animate-in fade-in slide-in-from-top-2 duration-300 pt-1 pb-4">
+                <div className="grid gap-4 md:grid-cols-2">
+                  <div className="grid gap-1.5">
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground/40">Audio Codec</span>
+                    <Input value={audioCodec} onChange={(event) => setAudioCodec(event.target.value)} placeholder="Auto / libmp3lame / aac" className="bg-transparent border-border/40" />
+                  </div>
+                  <div className="grid gap-1.5">
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground/40">Bitrate kbps</span>
+                    <Input value={audioBitrate} onChange={(event) => setAudioBitrate(event.target.value)} placeholder="Auto" className="bg-transparent border-border/40" />
+                  </div>
+                </div>
+              </div>
+            )}
+
+            <div className="flex justify-center translate-y-1/2">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => setShowAdvanced((value) => !value)}
+                className="z-10 rounded-full bg-card px-3 text-[11px] font-semibold text-muted-foreground shadow-none"
+              >
+                <span>Advanced settings</span>
+                {showAdvanced ? (
+                  <ChevronUp size={10} strokeWidth={3} className="opacity-70" />
+                ) : (
+                  <ChevronDown size={10} strokeWidth={3} className="opacity-70" />
+                )}
               </Button>
             </div>
           </div>
         </CardContent>
       </Card>
 
-      {guidance && <OutputGuidanceCard guidance={guidance} />}
-
-      {currentJob?.status === "running" ? (
-        <Card>
-          <CardContent className="space-y-4">
-            <div className="flex justify-between text-sm">
-              <span>{currentJob.phase ?? "Extracting"}...</span>
-              <span className="font-mono">{Math.round(currentJob.progress)}%</span>
-            </div>
-            <Progress value={currentJob.progress} className="h-2" />
-            <div className="flex justify-end">
-              <Button variant="destructive" onClick={() => void cancelExtraction()}>
-                <Square className="mr-2 h-4 w-4" /> Cancel
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-      ) : currentJob?.status === "completed" ? (
-        <Card className="bg-success/5">
-          <CardContent>
-            <div className="flex items-center justify-between gap-4">
-              <div className="min-w-0">
-                <p className="font-medium text-success">Audio extraction completed</p>
-                <p className="truncate text-sm text-muted-foreground">{currentJob.outputPath ?? outputPath}</p>
-              </div>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => void revealInExplorer(currentJob.outputPath ?? outputPath)}
-                className="shrink-0 border-success/20 hover:border-success/40 hover:bg-success/5"
-              >
-                <Folder className="mr-2 h-4 w-4" /> Open Folder
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-      ) : null}
+      {currentJob && (
+        <JobStatusCard
+          job={currentJob}
+          outputPath={outputPath}
+          onCancel={cancelJob}
+          labels={{
+            running: "Extracting",
+            completed: "Audio extraction completed",
+          }}
+        />
+      )}
 
       <div className="flex justify-end">
-        <Button size="lg" disabled={!activeFile || !outputPath} onClick={() => void startExtraction()}>
-          <Play className="mr-2 h-4 w-4" /> Extract to .{format}
+        <Button size="lg" disabled={!activeFile || !outputPath} onClick={() => void startExtraction()} className="h-10 gap-2.5 px-5 font-semibold">
+          <Play className="h-4 w-4" /> Extract to .{format}
         </Button>
       </div>
     </div>

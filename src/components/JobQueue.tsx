@@ -1,4 +1,5 @@
 import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import {
   Sheet,
@@ -7,10 +8,11 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
-import { revealInExplorer } from "@/lib/media-client";
-import { useJobStore } from "@/stores/jobStore";
 import { SidebarMenuButton, useSidebar } from "@/components/ui/sidebar";
-import { ListVideo, CheckCircle2, Folder, Loader2, Play, Trash2, XCircle } from "lucide-react";
+import { revealInExplorer } from "@/lib/media-client";
+import { cn } from "@/lib/utils";
+import { useJobStore } from "@/stores/jobStore";
+import { Check, Folder, ListVideo, Loader2, Play, Trash2, X, XCircle } from "lucide-react";
 
 export function JobQueue() {
   const { jobs, clearCompleted, startAllIdle, startJob, cancelJob, removeJob } = useJobStore();
@@ -25,17 +27,20 @@ export function JobQueue() {
             <ListVideo className="h-4 w-4" />
             {!collapsed && <span>Job Queue</span>}
             {jobs.length > 0 && (
-              <span className={collapsed ? "absolute -top-1 -right-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-1 text-[9px] font-bold text-primary-foreground shadow-sm" : "absolute right-2 flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-1 text-[9px] font-bold text-primary-foreground shadow-sm"}>
+              <span
+                className={
+                  collapsed
+                    ? "absolute -top-1 -right-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-1 text-[9px] font-bold text-primary-foreground shadow-sm"
+                    : "absolute right-2 flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-1 text-[9px] font-bold text-primary-foreground shadow-sm"
+                }
+              >
                 {jobs.length}
               </span>
             )}
           </SidebarMenuButton>
         }
       />
-      <SheetContent
-        side="bottom"
-        className="flex flex-col overflow-hidden pb-6"
-      >
+      <SheetContent side="bottom" className="flex flex-col overflow-hidden pb-6">
         <SheetHeader className="mb-4 flex flex-row items-center justify-between pr-12">
           <SheetTitle className="text-left text-xl">Job Queue</SheetTitle>
           <div className="flex items-center gap-2">
@@ -44,11 +49,7 @@ export function JobQueue() {
               size="sm"
               className="h-8 text-xs font-medium"
               onClick={clearCompleted}
-              disabled={
-                !jobs.some((job) =>
-                  ["completed", "cancelled"].includes(job.status),
-                )
-              }
+              disabled={!jobs.some((job) => ["completed", "cancelled"].includes(job.status))}
             >
               Clear Completed
             </Button>
@@ -64,136 +65,124 @@ export function JobQueue() {
           </div>
         </SheetHeader>
 
-        <div className="max-h-[min(56dvh,36rem)] overflow-y-auto px-4">
+        <div className="max-h-[min(56dvh,36rem)] overflow-y-auto px-4 pt-1">
           <div className="space-y-3 pb-1">
             {jobs.length === 0 ? (
-              <div className="flex flex-col gap-3 rounded-xl bg-card/60 p-4">
-                <div className="relative">
-                  <div
-                    aria-hidden="true"
-                    className="invisible flex flex-col items-center gap-1.5"
-                  >
-                    <span className="text-sm font-medium">
-                      Queue is empty
-                    </span>
-                    <span className="text-xs">placeholder</span>
-                  </div>
-                  <div className="absolute inset-0 flex items-center">
-                    <span className="text-sm font-medium text-foreground/75">
-                      Queue is empty
-                    </span>
-                  </div>
-                </div>
-              </div>
+              <Card size="sm" className="bg-card/60">
+                <CardContent>
+                  <span className="text-sm font-medium text-foreground/75">Queue is empty</span>
+                </CardContent>
+              </Card>
             ) : (
               jobs.map((job) => (
-                <div
-                  key={job.id}
-                  className="flex flex-col gap-3 rounded-xl bg-card/60 p-4 transition-all hover:bg-card/80"
-                >
-                  <div className="flex items-center justify-between gap-4">
-                    <div className="flex flex-col gap-1.5 overflow-hidden">
-                      <span className="truncate text-sm font-medium text-foreground/90">
-                        {job.fileName}
-                      </span>
-                      <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                        <span className="capitalize font-medium text-foreground/70">
-                          {job.workflow}
-                        </span>
-                        <span className="text-muted-foreground/40">•</span>
+                <Card key={job.id} size="sm" className="bg-card/60 transition-all hover:bg-card/80">
+                  <CardContent className="space-y-3">
+                    <div className="flex items-center justify-between gap-4">
+                      <div className="flex flex-col gap-1.5 overflow-hidden">
+                        <span className="truncate text-sm font-medium text-foreground/90">{job.fileName}</span>
+                        <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                        <span className="capitalize font-medium text-foreground/70">{job.workflow}</span>
+                        <span className="text-muted-foreground/40">&middot;</span>
                         <span className="flex items-center gap-1.5 capitalize">
                           {job.status === "completed" && (
-                            <CheckCircle2 className="h-3.5 w-3.5 text-success" />
+                            <Check className="h-4 w-4 text-success" strokeWidth={2.5} />
                           )}
                           {job.status === "failed" && (
-                            <XCircle className="h-3.5 w-3.5 text-destructive" />
+                            <X className="h-4 w-4 text-destructive" strokeWidth={2.5} />
                           )}
                           {job.status === "running" && (
                             <Loader2 className="h-3 w-3 animate-spin text-primary" />
-                          )}
-                          {job.status}
-                        </span>
-                        {job.phase &&
-                          job.phase.toLowerCase() !==
-                            job.status.toLowerCase() && (
+                            )}
+                            {job.status}
+                          </span>
+                          {job.phase && job.phase.toLowerCase() !== job.status.toLowerCase() && (
                             <>
-                              <span className="text-muted-foreground/40">•</span>
-                              <span className="text-muted-foreground/80">
-                                {job.phase}
-                              </span>
+                              <span className="text-muted-foreground/40">&middot;</span>
+                              <span className="text-muted-foreground/80">{job.phase}</span>
                             </>
                           )}
                       </div>
-                      {job.error && (
-                        <span className="mt-0.5 text-xs text-destructive">
-                          {job.error}
-                        </span>
+                      {job.status === "failed" && job.error && (
+                        <details className="mt-1 group">
+                          <summary className="list-none text-xs font-medium text-destructive/85 cursor-pointer select-none transition-colors hover:text-destructive">
+                            View error details
+                          </summary>
+                          <div className="mt-2 rounded-lg border border-destructive/15 bg-destructive/5 px-3 py-2 text-xs leading-relaxed whitespace-pre-wrap break-words text-destructive/85">
+                            {job.error}
+                          </div>
+                        </details>
                       )}
                     </div>
-                    <div className="flex shrink-0 items-center gap-1 opacity-80 transition-opacity hover:opacity-100">
-                      {job.status === "idle" && (
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-8 w-8 text-muted-foreground hover:bg-primary/10 hover:text-primary"
-                          onClick={() => void startJob(job.id)}
-                          title="Start"
-                        >
-                          <Play className="h-4 w-4 fill-current" />
-                        </Button>
-                      )}
-                      {job.status === "completed" && (
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-8 w-8 text-muted-foreground hover:bg-muted hover:text-foreground"
-                          onClick={() => {
-                            const path =
-                              job.outputPath ||
-                              ("outputPath" in job.request.payload
-                                ? job.request.payload.outputPath
-                                : null);
 
-                            if (path) {
-                              void revealInExplorer(path as string);
-                            }
-                          }}
-                          title="Open folder"
-                        >
-                          <Folder className="h-4 w-4" />
-                        </Button>
-                      )}
-                      {job.status === "running" && (
+                      <div className="flex shrink-0 items-center gap-1 opacity-80 transition-opacity hover:opacity-100">
+                        {job.status === "idle" && (
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8 text-muted-foreground hover:bg-primary/10 hover:text-primary"
+                            onClick={() => void startJob(job.id)}
+                            title="Start"
+                          >
+                            <Play className="h-4 w-4 fill-current" />
+                          </Button>
+                        )}
+                        {job.status === "completed" && (
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8 text-muted-foreground hover:bg-muted hover:text-foreground"
+                            onClick={() => {
+                              const path =
+                                job.outputPath ||
+                                ("outputPath" in job.request.payload
+                                  ? job.request.payload.outputPath
+                                  : null);
+
+                              if (path) {
+                                void revealInExplorer(path as string);
+                              }
+                            }}
+                            title="Open folder"
+                          >
+                            <Folder className="h-4 w-4" />
+                          </Button>
+                        )}
+                        {job.status === "running" && (
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8 text-muted-foreground hover:bg-muted hover:text-foreground"
+                            onClick={() => void cancelJob(job.id)}
+                            title="Cancel"
+                          >
+                            <XCircle className="h-4 w-4" />
+                          </Button>
+                        )}
                         <Button
                           variant="ghost"
                           size="icon"
-                          className="h-8 w-8 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
-                          onClick={() => void cancelJob(job.id)}
-                          title="Cancel"
+                          className={cn(
+                            "h-8 w-8 hover:bg-muted hover:text-foreground",
+                            job.status === "failed" ? "text-destructive/70 hover:bg-destructive/10 hover:text-destructive" : "text-muted-foreground",
+                          )}
+                          onClick={() => removeJob(job.id)}
+                          title="Remove"
                         >
-                          <XCircle className="h-4 w-4" />
+                          <Trash2 className="h-4 w-4" />
                         </Button>
-                      )}
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-8 w-8 text-muted-foreground hover:bg-muted hover:text-foreground"
-                        onClick={() => removeJob(job.id)}
-                        title="Remove"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
+                      </div>
                     </div>
-                  </div>
-                  {job.status === "running" && (
-                    <div className="flex items-center gap-3">
-                      <Progress value={job.progress} className="h-1.5 flex-1" />
-                      <span className="w-8 text-right font-mono text-xs text-muted-foreground">
-                        {job.progress}%
-                      </span>
-                    </div>
-                  )}
-                </div>
+
+                    {job.status === "running" && (
+                      <div className="flex items-center gap-3">
+                        <Progress value={job.progress} className="h-1.5 flex-1" />
+                        <span className="w-8 text-right font-mono text-xs text-muted-foreground">
+                          {job.progress}%
+                        </span>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
               ))
             )}
           </div>

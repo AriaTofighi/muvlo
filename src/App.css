@@ -83,6 +83,7 @@
   --surface-border-width: 1px;
   --surface-padding: 1.15rem;
   --surface-padding-compact: 0.85rem;
+  --surface-padding-comfortable: 1.5rem;
   --surface-blur: 14px;
   --control-height: 2.25rem;
   --control-height-compact: 1.95rem;
@@ -148,6 +149,15 @@
     scrollbar-width: thin;
   }
 
+  html[data-overlay-scrollbar-compensation] {
+    scrollbar-gutter: auto;
+  }
+
+  html[data-overlay-scrollbar-compensation] [data-slot="sidebar-wrapper"] {
+    box-sizing: border-box;
+    padding-right: var(--overlay-scrollbar-compensation, 0px);
+  }
+
   h1,
   h2,
   h3,
@@ -175,11 +185,16 @@
 
 @layer components {
   [data-slot="card"] {
+    --card-gap: 1rem;
+    --card-padding-inline: var(--surface-padding);
+    --card-padding-block: var(--surface-padding);
     border-radius: var(--radius-2xl);
     border-width: var(--surface-border-width);
     background-color: color-mix(in srgb, var(--card), transparent 15%);
     backdrop-filter: blur(var(--surface-blur));
     box-shadow: 0 4px 30px rgba(0, 0, 0, 0.05);
+    gap: var(--card-gap);
+    padding-block: var(--card-padding-block);
   }
 
   [data-slot="card-header"],
@@ -189,7 +204,7 @@
   [data-slot="dialog-footer"],
   [data-slot="sheet-header"],
   [data-slot="sheet-footer"] {
-    padding-inline: var(--surface-padding);
+    padding-inline: var(--card-padding-inline, var(--surface-padding));
   }
 
   [data-slot="card-footer"],
@@ -197,7 +212,7 @@
   [data-slot="dialog-footer"],
   [data-slot="sheet-header"],
   [data-slot="sheet-footer"] {
-    padding-block: var(--surface-padding);
+    padding-block: var(--card-padding-block, var(--surface-padding));
   }
 
   [data-slot="card-title"],
@@ -247,18 +262,39 @@
   }
 
   [data-slot="card"][data-size="sm"] {
+    --card-gap: 0.75rem;
+    --card-padding-inline: var(--surface-padding-compact);
+    --card-padding-block: var(--surface-padding-compact);
     border-radius: var(--radius-xl);
   }
 
-  [data-slot="card"][data-size="sm"] [data-slot="card-header"],
-  [data-slot="card"][data-size="sm"] [data-slot="card-content"],
-  [data-slot="card"][data-size="sm"] [data-slot="card-footer"] {
-    padding-inline: var(--surface-padding-compact);
+  [data-slot="card"][data-size="lg"] {
+    --card-gap: 1.5rem;
+    --card-padding-inline: var(--surface-padding-comfortable);
+    --card-padding-block: var(--surface-padding-comfortable);
   }
 
-  [data-slot="card"][data-size="sm"] [data-slot="card-footer"] {
-    padding-block: var(--surface-padding-compact);
+  [data-slot="card"][data-size="flush"] {
+    --card-gap: 0;
+    --card-padding-inline: 0rem;
+    --card-padding-block: 0rem;
   }
+
+  .surface-inset,
+  .surface-inset-compact {
+    border-radius: var(--radius-xl);
+    border: var(--surface-border-width) solid color-mix(in srgb, var(--border), transparent 35%);
+    background-color: color-mix(in srgb, var(--muted), transparent 68%);
+  }
+
+  .surface-inset {
+    padding: var(--surface-padding);
+  }
+
+  .surface-inset-compact {
+    padding: var(--surface-padding-compact);
+  }
+
 }
 
 .dark ::-webkit-scrollbar {
@@ -295,7 +331,8 @@
 
 .card,
 .sidebar-menu-button {
-  @apply transition-all duration-300;
+  transition-property: border-color, background-color, box-shadow, opacity, transform;
+  transition-duration: 300ms;
 }
 
 .dark .card:hover {

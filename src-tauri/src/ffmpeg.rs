@@ -3,7 +3,7 @@ use regex::Regex;
 use rfd::FileDialog;
 use serde::{Deserialize, Serialize};
 use std::{
-    collections::HashMap,
+    collections::{HashMap, VecDeque},
     env,
     fs,
     path::{Path, PathBuf},
@@ -178,6 +178,15 @@ pub struct JobCompleteEvent {
     pub output_path: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub error: Option<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum SimulatedFailureScenario {
+    ContainerMismatch,
+    EncoderUnavailable,
+    PermissionDenied,
+    CorruptInput,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -400,6 +409,50 @@ pub async fn cancel_media_job(
     Ok(())
 }
 
+#[tauri::command]
+pub async fn simulate_job_failure(
+    app: AppHandle,
+    job_id: String,
+    scenario: SimulatedFailureScenario,
+) -> Result<(), String> {
+    validate_job_id(&job_id)?;
+
+    let app_handle = app.clone();
+    tauri::async_runtime::spawn(async move {
+        let _ = emit_progress(
+            &app_handle,
+            &job_id,
+            Some("Starting"),
+            Some(4.0),
+            None,
+            None,
+            None,
+            None,
+        );
+        tokio::time::sleep(std::time::Duration::from_millis(300)).await;
+        let _ = emit_progress(
+            &app_handle,
+            &job_id,
+            Some("Processing"),
+            Some(41.0),
+            Some(1.2),
+            Some(23.8),
+            Some(0.84),
+            Some(2.1),
+        );
+        tokio::time::sleep(std::time::Duration::from_millis(450)).await;
+        let _ = emit_complete(
+            &app_handle,
+            &job_id,
+            false,
+            None,
+            Some(simulated_failure_message(scenario)),
+        );
+    });
+
+    Ok(())
+}
+
 impl JobRegistry {
     async fn insert(&self, job_id: String, control: Arc<JobControl>) -> Result<(), String> {
         let mut jobs = self.jobs.lock().await;
@@ -468,6 +521,7 @@ async fn execute_media_job(
     let mut lines = BufReader::new(stderr).lines();
     let mut cancelled = false;
     let mut last_stderr_line: Option<String> = None;
+    let mut recent_stderr_lines: VecDeque<String> = VecDeque::with_capacity(8);
 
     loop {
         tokio::select! {
@@ -475,6 +529,7 @@ async fn execute_media_job(
                 match line {
                     Ok(Some(line)) => {
                         last_stderr_line = Some(line.clone());
+                        push_recent_stderr_line(&mut recent_stderr_lines, &line);
                         if let Some(progress) = parse_progress_line(&line, total_duration) {
                             emit_progress(
                                 &app,
@@ -521,8 +576,57 @@ async fn execute_media_job(
         return Ok(());
     }
 
-    let error = last_stderr_line.unwrap_or_else(|| format!("ffmpeg exited with status {status}"));
+    let error = build_ffmpeg_error_message(&recent_stderr_lines, last_stderr_line.as_deref(), &status.to_string());
     Err(error)
+}
+
+fn push_recent_stderr_line(recent_lines: &mut VecDeque<String>, line: &str) {
+    let trimmed = line.trim();
+    if trimmed.is_empty() || parse_progress_line(trimmed, None).is_some() {
+        return;
+    }
+
+    if recent_lines.back().is_some_and(|existing| existing == trimmed) {
+        return;
+    }
+
+    if recent_lines.len() == 8 {
+        recent_lines.pop_front();
+    }
+
+    recent_lines.push_back(trimmed.to_string());
+}
+
+fn build_ffmpeg_error_message(
+    recent_lines: &VecDeque<String>,
+    last_line: Option<&str>,
+    status: &str,
+) -> String {
+    let meaningful_lines = recent_lines
+        .iter()
+        .filter(|line| !is_generic_ffmpeg_failure_line(line))
+        .cloned()
+        .collect::<Vec<_>>();
+
+    if !meaningful_lines.is_empty() {
+        return meaningful_lines.join("\n");
+    }
+
+    if let Some(line) = last_line {
+        let trimmed = line.trim();
+        if !trimmed.is_empty() {
+            return trimmed.to_string();
+        }
+    }
+
+    format!("ffmpeg exited with status {status}")
+}
+
+fn is_generic_ffmpeg_failure_line(line: &str) -> bool {
+    matches!(
+        line.trim(),
+        "Conversion failed!" | "Job cancelled"
+    )
 }
 
 fn build_command_plan(workflow: &MediaJobWorkflow, job_id: &str) -> Result<CommandPlan, String> {
@@ -596,11 +700,32 @@ fn build_convert_plan(request: &ConvertJobRequest) -> Result<CommandPlan, String
         "-i".to_string(),
         request.input_path.clone(),
     ];
-    args.push("-map".to_string());
-    args.push("0".to_string());
+    if output_ext == "gif" {
+        args.extend([
+            "-map".to_string(),
+            "0:v:0".to_string(),
+            "-an".to_string(),
+            "-sn".to_string(),
+            "-dn".to_string(),
+            "-c:v".to_string(),
+            request
+                .video_codec
+                .clone()
+                .unwrap_or_else(|| "gif".to_string()),
+        ]);
+
+        args.extend(request.extra_args.iter().cloned());
+        args.push(request.output_path.clone());
+
+        return Ok(CommandPlan {
+            args,
+            cleanup_files: Vec::new(),
+        });
+    }
 
     match flavor {
         MediaFlavor::AudioOnly => {
+            args.extend(["-map".to_string(), "0:a:0?".to_string()]);
             args.push("-vn".to_string());
             let codec = request
                 .audio_codec
@@ -610,7 +735,10 @@ fn build_convert_plan(request: &ConvertJobRequest) -> Result<CommandPlan, String
             args.extend(["-c:a".to_string(), codec]);
         }
         MediaFlavor::Image => {
+            args.extend(["-map".to_string(), "0:v:0".to_string()]);
             args.push("-an".to_string());
+            args.push("-sn".to_string());
+            args.push("-dn".to_string());
             let codec = request.video_codec.clone().unwrap_or_else(|| {
                 if output_ext == "webp" {
                     "libwebp".to_string()
@@ -623,21 +751,17 @@ fn build_convert_plan(request: &ConvertJobRequest) -> Result<CommandPlan, String
             args.extend(["-c:v".to_string(), codec]);
         }
         _ => {
+            args.extend(["-map".to_string(), "0:v:0?".to_string()]);
+            args.extend(["-map".to_string(), "0:a?".to_string()]);
             let video_codec = request.video_codec.clone().unwrap_or_else(|| {
-                if output_ext == "webp" {
-                    "libwebp".to_string()
-                } else if output_ext == "gif" {
-                    "gif".to_string()
-                } else {
-                    "libx264".to_string()
-                }
+                default_video_codec_for_extension(&output_ext).to_string()
             });
 
-            let audio_codec = request.audio_codec.clone().unwrap_or_else(|| "aac".to_string());
-            let subtitle_codec = request
-                .subtitle_codec
+            let audio_codec = request
+                .audio_codec
                 .clone()
-                .unwrap_or_else(|| subtitle_codec_for_extension(&output_ext).to_string());
+                .or_else(|| audio_codec_for_extension(&output_ext).map(ToOwned::to_owned))
+                .unwrap_or_else(|| "aac".to_string());
 
             args.extend([
                 "-c:v".to_string(),
@@ -645,7 +769,19 @@ fn build_convert_plan(request: &ConvertJobRequest) -> Result<CommandPlan, String
                 "-c:a".to_string(),
                 audio_codec,
             ]);
-            args.extend(["-c:s".to_string(), subtitle_codec]);
+
+            if let Some(subtitle_codec) = request
+                .subtitle_codec
+                .clone()
+                .or_else(|| subtitle_codec_for_extension(&output_ext).map(ToOwned::to_owned))
+            {
+                args.extend(["-map".to_string(), "0:s?".to_string()]);
+                args.extend(["-c:s".to_string(), subtitle_codec]);
+            } else {
+                args.push("-sn".to_string());
+            }
+
+            args.push("-dn".to_string());
 
             if matches!(output_ext.as_str(), "mp4" | "mov" | "m4v") {
                 args.extend(["-movflags".to_string(), "+faststart".to_string()]);
@@ -899,8 +1035,9 @@ fn build_subtitles_plan(request: &SubtitlesJobRequest) -> Result<CommandPlan, St
             "aac".to_string(),
         ]);
     } else {
-        let subtitle_codec =
-            subtitle_codec_for_extension(&normalized_extension(Path::new(&request.output_path)));
+        let output_ext = normalized_extension(Path::new(&request.output_path));
+        let subtitle_codec = subtitle_codec_for_extension(&output_ext)
+            .ok_or_else(|| format!("Soft subtitles are not supported for .{output_ext} output."))?;
         args.extend([
             "-c:v".to_string(),
             "copy".to_string(),
@@ -991,14 +1128,24 @@ fn audio_codec_for_extension(ext: &str) -> Option<&'static str> {
         "wav" => Some("pcm_s16le"),
         "flac" => Some("flac"),
         "ogg" => Some("libvorbis"),
+        "webm" => Some("libopus"),
         _ => None,
     }
 }
 
-fn subtitle_codec_for_extension(ext: &str) -> &'static str {
+fn default_video_codec_for_extension(ext: &str) -> &'static str {
     match ext {
-        "mp4" | "mov" | "m4v" => "mov_text",
-        _ => "copy",
+        "webp" => "libwebp",
+        "webm" => "libvpx-vp9",
+        _ => "libx264",
+    }
+}
+
+fn subtitle_codec_for_extension(ext: &str) -> Option<&'static str> {
+    match ext {
+        "mp4" | "mov" | "m4v" => Some("mov_text"),
+        "mkv" => Some("copy"),
+        _ => None,
     }
 }
 
@@ -1173,6 +1320,35 @@ fn emit_complete(
     .map_err(|e| format!("Failed to emit job complete event: {e}"))
 }
 
+fn simulated_failure_message(scenario: SimulatedFailureScenario) -> String {
+    match scenario {
+        SimulatedFailureScenario::ContainerMismatch => [
+            "[out#0/webm @ 000001] Could not write header (incorrect codec parameters ?): Invalid argument",
+            "[aac @ 000002] WebM does not support AAC audio. Use Opus or Vorbis instead.",
+            "Nothing was written into output file, because one or more streams had no packets.",
+        ]
+        .join("\n"),
+        SimulatedFailureScenario::EncoderUnavailable => [
+            "Unknown encoder 'libsvtav1'",
+            "Error selecting an encoder for stream 0:0.",
+            "The requested encoder is not available in this FFmpeg build.",
+        ]
+        .join("\n"),
+        SimulatedFailureScenario::PermissionDenied => [
+            "C:\\Users\\ariat\\Videos\\exports\\demo.mp4: Permission denied",
+            "Failed to open output file for writing.",
+            "Check that the destination folder is writable and the file is not already open in another app.",
+        ]
+        .join("\n"),
+        SimulatedFailureScenario::CorruptInput => [
+            "Invalid data found when processing input",
+            "Error while decoding stream #0:0: Invalid argument",
+            "The source file appears to be truncated or corrupted.",
+        ]
+        .join("\n"),
+    }
+}
+
 async fn inspect_tool(env_name: &str, default: &str) -> Option<String> {
     let mut command = Command::new(tool_path(env_name, default));
     command.arg("-version");
@@ -1243,7 +1419,7 @@ mod tests {
 
     #[test]
     fn quality_maps_to_crf_range() {
-        assert_eq!(quality_to_crf(0), 28);
+        assert_eq!(quality_to_crf(0), 51);
         assert_eq!(quality_to_crf(100), 18);
     }
 
@@ -1261,5 +1437,77 @@ mod tests {
         assert!((metrics.time_seconds - 4.12).abs() < 0.01);
         assert!((metrics.fps.unwrap() - 29.97).abs() < 0.01);
         assert!((metrics.speed.unwrap() - 1.01).abs() < 0.01);
+    }
+
+    #[test]
+    fn convert_plan_for_webm_uses_webm_compatible_codecs() {
+        let plan = build_convert_plan(&ConvertJobRequest {
+            input_path: "C:\\video.mkv".to_string(),
+            output_path: "C:\\video.webm".to_string(),
+            video_codec: None,
+            audio_codec: None,
+            subtitle_codec: None,
+            extra_args: Vec::new(),
+        })
+        .expect("plan");
+
+        assert!(plan.args.contains(&"libvpx-vp9".to_string()));
+        assert!(plan.args.contains(&"libopus".to_string()));
+        assert!(plan.args.contains(&"-sn".to_string()));
+        assert!(plan.args.contains(&"-dn".to_string()));
+    }
+
+    #[test]
+    fn convert_plan_for_mp4_uses_mp4_defaults() {
+        let plan = build_convert_plan(&ConvertJobRequest {
+            input_path: "C:\\video.mkv".to_string(),
+            output_path: "C:\\video.mp4".to_string(),
+            video_codec: None,
+            audio_codec: None,
+            subtitle_codec: None,
+            extra_args: Vec::new(),
+        })
+        .expect("plan");
+
+        assert!(plan.args.contains(&"libx264".to_string()));
+        assert!(plan.args.contains(&"aac".to_string()));
+        assert!(plan.args.contains(&"mov_text".to_string()));
+        assert!(plan.args.contains(&"+faststart".to_string()));
+    }
+
+    #[test]
+    fn convert_plan_for_mov_uses_mov_defaults() {
+        let plan = build_convert_plan(&ConvertJobRequest {
+            input_path: "C:\\video.mkv".to_string(),
+            output_path: "C:\\video.mov".to_string(),
+            video_codec: None,
+            audio_codec: None,
+            subtitle_codec: None,
+            extra_args: Vec::new(),
+        })
+        .expect("plan");
+
+        assert!(plan.args.contains(&"libx264".to_string()));
+        assert!(plan.args.contains(&"aac".to_string()));
+        assert!(plan.args.contains(&"mov_text".to_string()));
+        assert!(plan.args.contains(&"+faststart".to_string()));
+    }
+
+    #[test]
+    fn convert_plan_for_mkv_preserves_subtitles_by_default() {
+        let plan = build_convert_plan(&ConvertJobRequest {
+            input_path: "C:\\video.mp4".to_string(),
+            output_path: "C:\\video.mkv".to_string(),
+            video_codec: None,
+            audio_codec: None,
+            subtitle_codec: None,
+            extra_args: Vec::new(),
+        })
+        .expect("plan");
+
+        assert!(plan.args.contains(&"libx264".to_string()));
+        assert!(plan.args.contains(&"aac".to_string()));
+        assert!(plan.args.contains(&"copy".to_string()));
+        assert!(!plan.args.contains(&"mov_text".to_string()));
     }
 }

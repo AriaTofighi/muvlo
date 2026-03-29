@@ -12,7 +12,7 @@ import {
   Trash2,
 } from "lucide-react";
 import { toast } from "sonner";
-import { OutputGuidanceCard } from "@/components/export/OutputGuidanceCard";
+import { OutputGuidanceContent } from "@/components/export/OutputGuidanceContent";
 import { SourceWorkspaceCard } from "@/components/workspace/SourceWorkspaceCard";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -265,7 +265,7 @@ export function Trim() {
   };
 
   return (
-    <div className="mx-auto max-w-4xl space-y-6 animate-in fade-in duration-500">
+    <div className="mx-auto max-w-4xl space-y-6 animate-in fade-in duration-500 transform-gpu translate-z-0">
       <div className="mb-6">
         <h2 className="text-3xl font-bold tracking-tight">Trim</h2>
       </div>
@@ -281,20 +281,38 @@ export function Trim() {
         onDropSource={(files) => void handleDroppedSource(files)}
       />
 
-      <Card>
-        <CardContent className="space-y-6">
-          <div className="overflow-hidden rounded-xl border bg-muted/20">
-            {previewSrc ? (
-              activeFile?.kind === "audio" ? (
-                <div className="space-y-4 p-6">
-                  <audio
+      <Card size="flush" className="overflow-hidden">
+        <CardContent>
+          <div className="space-y-6 p-[var(--surface-padding)]">
+            <div className="overflow-hidden rounded-xl border bg-muted/20">
+              {previewSrc ? (
+                activeFile?.kind === "audio" ? (
+                  <div className="space-y-4 p-[var(--surface-padding)]">
+                    <audio
+                      ref={(node) => {
+                        mediaRef.current = node;
+                      }}
+                      src={previewSrc}
+                      controls
+                      preload="metadata"
+                      className="w-full"
+                      onTimeUpdate={(event) => setCurrentTime(event.currentTarget.currentTime)}
+                      onLoadedMetadata={(event) => {
+                        setCurrentTime(event.currentTarget.currentTime);
+                      }}
+                      onPlay={() => setIsPlaying(true)}
+                      onPause={() => setIsPlaying(false)}
+                    />
+                  </div>
+                ) : (
+                  <video
                     ref={(node) => {
                       mediaRef.current = node;
                     }}
                     src={previewSrc}
                     controls
                     preload="metadata"
-                    className="w-full"
+                    className="aspect-video w-full bg-black object-contain"
                     onTimeUpdate={(event) => setCurrentTime(event.currentTarget.currentTime)}
                     onLoadedMetadata={(event) => {
                       setCurrentTime(event.currentTarget.currentTime);
@@ -302,131 +320,119 @@ export function Trim() {
                     onPlay={() => setIsPlaying(true)}
                     onPause={() => setIsPlaying(false)}
                   />
-                </div>
+                )
               ) : (
-                <video
-                  ref={(node) => {
-                    mediaRef.current = node;
-                  }}
-                  src={previewSrc}
-                  controls
-                  preload="metadata"
-                  className="aspect-video w-full bg-black object-contain"
-                  onTimeUpdate={(event) => setCurrentTime(event.currentTarget.currentTime)}
-                  onLoadedMetadata={(event) => {
-                    setCurrentTime(event.currentTarget.currentTime);
-                  }}
-                  onPlay={() => setIsPlaying(true)}
-                  onPause={() => setIsPlaying(false)}
-                />
-              )
-            ) : (
-              <div className="flex aspect-video items-center justify-center text-sm text-muted-foreground">
-                Load a file to preview it here.
+                <div className="flex aspect-video items-center justify-center text-sm text-muted-foreground">
+                  Load a file to preview it here.
+                </div>
+              )}
+            </div>
+
+            <div className="flex flex-wrap items-center gap-2">
+              <Button variant="outline" size="sm" onClick={() => void togglePlayback()} disabled={!previewSrc} className="h-8 font-semibold">
+                {isPlaying ? <Pause className="mr-2 h-3 w-3 fill-current" /> : <Play className="mr-2 h-3 w-3 fill-current" />}
+                {isPlaying ? "Pause" : "Play"}
+              </Button>
+              <Button variant="outline" size="sm" onClick={() => stepByFrames(-1)} disabled={!previewSrc} className="h-8 font-semibold">
+                <SkipBack className="mr-2 h-3 w-3 fill-current" /> Prev frame
+              </Button>
+              <Button variant="outline" size="sm" onClick={() => stepByFrames(1)} disabled={!previewSrc} className="h-8 font-semibold">
+                <SkipForward className="mr-2 h-3 w-3 fill-current" /> Next frame
+              </Button>
+              <div className="w-px h-6 bg-border mx-1" />
+              <Button variant="outline" size="sm" onClick={setInPoint} disabled={!previewSrc} className="h-8 font-semibold">
+                Mark in
+              </Button>
+              <Button variant="outline" size="sm" onClick={setOutPoint} disabled={!previewSrc} className="h-8 font-semibold">
+                Mark out
+              </Button>
+              <div className="ml-auto rounded-full border border-border/40 bg-muted/20 px-3 py-1 text-[10px] font-bold text-muted-foreground tracking-tight">
+                frame {currentFrame}
               </div>
-            )}
-          </div>
-
-          <div className="flex flex-wrap items-center gap-2">
-            <Button variant="outline" size="sm" onClick={() => void togglePlayback()} disabled={!previewSrc}>
-              {isPlaying ? <Pause className="mr-2 h-4 w-4" /> : <Play className="mr-2 h-4 w-4" />}
-              {isPlaying ? "Pause" : "Play"}
-            </Button>
-            <Button variant="outline" size="sm" onClick={() => stepByFrames(-1)} disabled={!previewSrc}>
-              <SkipBack className="mr-2 h-4 w-4" /> Prev frame
-            </Button>
-            <Button variant="outline" size="sm" onClick={() => stepByFrames(1)} disabled={!previewSrc}>
-              <SkipForward className="mr-2 h-4 w-4" /> Next frame
-            </Button>
-            <div className="w-px h-6 bg-border mx-1" />
-            <Button variant="outline" size="sm" onClick={setInPoint} disabled={!previewSrc}>
-              Mark in
-            </Button>
-            <Button variant="outline" size="sm" onClick={setOutPoint} disabled={!previewSrc}>
-              Mark out
-            </Button>
-            <div className="ml-auto rounded-full border bg-muted/30 px-3 py-1 text-xs font-medium text-muted-foreground">
-              Frame {currentFrame}
             </div>
-          </div>
 
-          <div
-            ref={timelineRef}
-            onClick={handleTimelineSeek}
-            className="relative overflow-hidden rounded-xl border bg-card/40 p-4"
-          >
-            <div className="pointer-events-none absolute inset-y-4 rounded-lg bg-accent/10" style={{ left: `${range[0]}%`, right: `${100 - range[1]}%` }} />
-            {waveformDataUrl ? (
-              <img src={waveformDataUrl} alt="Audio waveform" className="h-28 w-full rounded-xl object-cover opacity-80" />
-            ) : (
-              <div className="h-28 rounded-xl bg-[linear-gradient(90deg,transparent_0%,rgba(255,255,255,0.06)_25%,transparent_50%,rgba(255,255,255,0.06)_75%,transparent_100%)] bg-[length:24px_100%] bg-muted/40" />
-            )}
             <div
-              className="pointer-events-none absolute inset-y-4 w-px bg-accent shadow-[0_0_0_1px_hsl(var(--accent)/0.3)]"
-              style={{ left: `${durationSeconds === 0 ? 0 : (currentTime / durationSeconds) * 100}%` }}
-            />
-            <div className="mt-4">
-              <Slider
-                value={range}
-                max={100}
-                step={0.1}
-                minStepsBetweenValues={0.2}
-                onValueChange={(value) => setRange(value as number[])}
-                className="w-full"
-                disabled={!activeFile || durationSeconds === 0}
+              ref={timelineRef}
+              onClick={handleTimelineSeek}
+              className="surface-inset relative overflow-hidden bg-card/40"
+            >
+              <div className="pointer-events-none absolute inset-y-4 rounded-lg bg-accent/10" style={{ left: `${range[0]}%`, right: `${100 - range[1]}%` }} />
+              {waveformDataUrl ? (
+                <img src={waveformDataUrl} alt="Audio waveform" className="h-28 w-full rounded-xl object-cover opacity-80" />
+              ) : (
+                <div className="h-28 rounded-xl bg-[linear-gradient(90deg,transparent_0%,rgba(255,255,255,0.06)_25%,transparent_50%,rgba(255,255,255,0.06)_75%,transparent_100%)] bg-[length:24px_100%] bg-muted/40" />
+              )}
+              <div
+                className="pointer-events-none absolute inset-y-4 w-px bg-accent shadow-[0_0_0_1px_hsl(var(--accent)/0.3)]"
+                style={{ left: `${durationSeconds === 0 ? 0 : (currentTime / durationSeconds) * 100}%` }}
               />
-            </div>
-            <div className="mt-4 flex flex-wrap items-center justify-between gap-3 text-sm">
-              <span className="font-mono text-muted-foreground">In {formatPreciseDuration(startSeconds)}</span>
-              <span className="text-xs text-muted-foreground">{formatDuration(clipDuration)}</span>
-              <span className="font-mono text-muted-foreground">Out {formatPreciseDuration(endSeconds)}</span>
+              <div className="mt-4">
+                <Slider
+                  value={range}
+                  max={100}
+                  step={0.1}
+                  minStepsBetweenValues={0.2}
+                  onValueChange={(value) => setRange(value as number[])}
+                  className="w-full"
+                  disabled={!activeFile || durationSeconds === 0}
+                />
+              </div>
+              <div className="mt-4 flex flex-wrap items-center justify-between gap-3 text-[11px] font-bold text-muted-foreground lowercase">
+                <span className="bg-muted/30 px-2 py-0.5 rounded">in {formatPreciseDuration(startSeconds)}</span>
+                <span className="text-foreground font-bold">{formatDuration(clipDuration)} selection</span>
+                <span className="bg-muted/30 px-2 py-0.5 rounded">out {formatPreciseDuration(endSeconds)}</span>
+              </div>
             </div>
           </div>
+
+          {guidance && (
+            <div className="border-t border-border/10 bg-muted/5 p-[var(--surface-padding)]">
+              <OutputGuidanceContent guidance={guidance} />
+            </div>
+          )}
         </CardContent>
       </Card>
 
-      {guidance && <OutputGuidanceCard guidance={guidance} />}
-
-      <Card>
+      <Card size="lg">
         <CardContent className="space-y-5">
           <div className="flex flex-wrap gap-3">
-            <Button onClick={addClipToQueue} disabled={!selectionValid}>
+            <Button onClick={addClipToQueue} disabled={!selectionValid} className="font-semibold h-10 px-5 shadow-none">
               <Plus className="mr-2 h-4 w-4" /> Add selection
             </Button>
-            <Button variant="secondary" onClick={() => void exportQueuedClips()} disabled={queuedClips.length === 0}>
+            <Button variant="secondary" onClick={() => void exportQueuedClips()} disabled={queuedClips.length === 0} className="font-semibold h-10 px-5 shadow-none border border-border/40">
               <Scissors className="mr-2 h-4 w-4" /> Export queued clips
             </Button>
           </div>
 
           {queuedClips.length === 0 ? (
-            <div className="rounded-xl border border-dashed px-4 py-6 text-sm text-muted-foreground">No clips queued.</div>
+            <div className="rounded-xl border border-dashed border-border/40 px-4 py-8 text-sm text-muted-foreground text-center">No clips queued. Add current selection to begin.</div>
           ) : (
             <div className="space-y-3">
               {queuedClips.map((clip) => {
                 const job = clip.jobId ? queueJobs.get(clip.jobId) : null;
 
                 return (
-                  <div key={clip.id} className="flex flex-col gap-3 rounded-xl border bg-muted/10 p-4 lg:flex-row lg:items-center lg:justify-between">
+                  <div key={clip.id} className="surface-inset flex flex-col gap-3 bg-muted/10 lg:flex-row lg:items-center lg:justify-between transition-all hover:bg-muted/20 hover:border-border/60">
                     <div className="min-w-0">
                       <div className="flex flex-wrap items-center gap-2">
-                        <p className="font-medium">{clip.label}</p>
-                        <span className="text-sm text-muted-foreground">
+                        <p className="font-bold text-sm text-foreground">{clip.label}</p>
+                        <span className="text-[10px] font-bold bg-muted/60 px-2 py-0.5 rounded text-muted-foreground/90 lowercase tracking-tight">
                           {formatPreciseDuration(clip.startSeconds)} to {formatPreciseDuration(clip.endSeconds)}
                         </span>
                       </div>
-                      <p className="truncate text-xs font-mono text-muted-foreground">{clip.outputPath}</p>
+                      <p className="truncate text-[10px] text-muted-foreground/60 mt-0.8 lowercase tracking-tight">{clip.outputPath}</p>
                       {job && (
-                        <div className="mt-3 space-y-2">
-                          <div className="flex justify-between text-xs text-muted-foreground">
-                            <span>{job.phase ?? "Queued"}</span>
+                        <div className="mt-4 space-y-2">
+                          <div className="flex justify-between text-[11px] font-bold lowercase text-muted-foreground/60 tracking-tight">
+                            <span>{job.phase?.toLowerCase() ?? "queued"}</span>
                             <span>{Math.round(job.progress)}%</span>
                           </div>
-                          <Progress value={job.progress} className="h-1.5" />
+                          <Progress value={job.progress} className="h-1 bg-muted/20" />
                         </div>
                       )}
                     </div>
 
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 lg:shrink-0">
                       {job?.status === "completed" && (
                         <Button
                           variant="outline"
@@ -438,8 +444,9 @@ export function Trim() {
 
                             void revealInExplorer(job.outputPath ?? clip.outputPath);
                           }}
+                          className="h-8 text-xs font-semibold border-border/40 hover:border-success/30 hover:bg-success/5"
                         >
-                          <Folder className="mr-2 h-4 w-4" /> Open
+                          <Folder className="mr-2 h-3.5 w-3.5" /> Open
                         </Button>
                       )}
                       {job?.status === "running" && clip.jobId && (
@@ -453,13 +460,14 @@ export function Trim() {
 
                             void useJobStore.getState().cancelJob(clip.jobId);
                           }}
+                          className="h-8 text-xs font-semibold"
                         >
-                          <Square className="mr-2 h-4 w-4" /> Cancel
+                          <Square className="mr-2 h-3 w-3 fill-current" /> Cancel
                         </Button>
                       )}
                       {!job && (
-                        <Button variant="ghost" size="sm" onClick={() => removeClip(clip.id)}>
-                          <Trash2 className="mr-2 h-4 w-4" /> Remove
+                        <Button variant="ghost" size="icon" onClick={() => removeClip(clip.id)} className="h-8 w-8 text-muted-foreground hover:text-destructive transition-colors">
+                          <Trash2 className="h-4 w-4" />
                         </Button>
                       )}
                     </div>
