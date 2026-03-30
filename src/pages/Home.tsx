@@ -77,8 +77,8 @@ export function Home() {
               <div className="flex items-center gap-4 min-w-0">
                 <div className="min-w-0">
                   <div className="flex items-center gap-2">
-                    <p className="truncate font-extrabold text-foreground text-sm">{activeFile.name}</p>
-                    <span className="text-[10px] text-muted-foreground/60 font-bold px-1.5 py-0.5 rounded bg-muted/60 uppercase tracking-wider">
+                    <p className="truncate font-semibold text-foreground text-sm">{activeFile.name}</p>
+                    <span className="text-[10px] text-muted-foreground/60 font-semibold px-1.5 py-0.5 rounded bg-muted/60 uppercase tracking-wider">
                       {activeFile.extension?.replace(".", "") ?? "FILE"}
                     </span>
                   </div>
@@ -132,7 +132,7 @@ export function Home() {
                     <p className="truncate text-sm font-semibold text-muted-foreground group-hover:text-accent transition-colors">{file.name}</p>
                     <p className="text-[10px] text-muted-foreground/60 truncate mt-0.5 lowercase tracking-tight">{file.path}</p>
                   </div>
-                  <span className="shrink-0 text-[10px] font-bold text-muted-foreground border border-border/80 rounded px-2 py-0.5 bg-muted/20">
+                  <span className="shrink-0 text-[10px] font-semibold text-muted-foreground border border-border/80 rounded px-2 py-0.5 bg-muted/20">
                     {formatFileSize(file.size)}
                   </span>
                 </button>
@@ -148,7 +148,7 @@ export function Home() {
             <Card size="sm" className="h-full hover:bg-accent/[0.03] transition-colors">
               <CardHeader className="flex-row items-center gap-3 p-[var(--card-padding-block)]">
                 <workflow.icon className="size-4 text-muted-foreground group-hover:text-accent transition-colors" />
-                <CardTitle className="text-sm font-bold text-foreground group-hover:text-accent transition-colors m-0 leading-none">
+                <CardTitle className="text-sm font-semibold text-foreground group-hover:text-accent transition-colors m-0 leading-none">
                   {workflow.title}
                 </CardTitle>
               </CardHeader>

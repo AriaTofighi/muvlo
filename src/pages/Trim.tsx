@@ -43,6 +43,8 @@ interface QueuedClip {
   jobId?: string;
 }
 
+const TRIM_HANDLE_SIZE_PX = 12;
+
 export function Trim() {
   const activeFile = useWorkspaceStore((state) => state.activeFile);
   const { jobs, enqueueJob, startJob } = useJobStore();
@@ -52,8 +54,10 @@ export function Trim() {
   const [queuedClips, setQueuedClips] = useState<QueuedClip[]>([]);
   const [currentTime, setCurrentTime] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
+  const [previewError, setPreviewError] = useState<string | null>(null);
+  const [timelineWidth, setTimelineWidth] = useState(0);
   const mediaRef = useRef<HTMLMediaElement | null>(null);
-  const timelineRef = useRef<HTMLDivElement | null>(null);
+  const timelineStripRef = useRef<HTMLDivElement | null>(null);
 
   const durationSeconds = getMediaDurationSeconds(activeFile?.mediaInfo) ?? 0;
   const startSeconds = durationSeconds === 0 ? 0 : (range[0] / 100) * durationSeconds;
@@ -64,6 +68,16 @@ export function Trim() {
   const frameDuration = 1 / frameRate;
   const currentFrame = Math.max(0, Math.round(currentTime * frameRate));
   const previewSrc = activeFile && hasTauriRuntime() ? convertFileSrc(activeFile.path) : null;
+  const previewAvailable = Boolean(previewSrc && !previewError);
+  const currentTimeRatio = durationSeconds === 0 ? 0 : currentTime / durationSeconds;
+  const timelineTravelWidth = Math.max(0, timelineWidth - TRIM_HANDLE_SIZE_PX);
+  const selectionLeft = (range[0] / 100) * timelineTravelWidth;
+  const selectionRight = Math.max(
+    0,
+    timelineWidth - ((range[1] / 100) * timelineTravelWidth + TRIM_HANDLE_SIZE_PX),
+  );
+  const playheadLeft =
+    timelineWidth > 0 ? clampValue(currentTimeRatio, 0, 1) * timelineTravelWidth : currentTimeRatio * 100;
 
   useEffect(() => {
     setRange([0, 100]);
@@ -71,6 +85,7 @@ export function Trim() {
     setQueuedClips([]);
     setWaveformDataUrl(null);
     setIsPlaying(false);
+    setPreviewError(null);
 
     if (!activeFile) {
       return;
@@ -88,6 +103,27 @@ export function Trim() {
       }
     }
   }, [activeFile]);
+
+  useEffect(() => {
+    const timeline = timelineStripRef.current;
+    if (!timeline) {
+      setTimelineWidth(0);
+      return;
+    }
+
+    const updateWidth = () => {
+      setTimelineWidth(timeline.clientWidth);
+    };
+
+    updateWidth();
+
+    const observer = new ResizeObserver(updateWidth);
+    observer.observe(timeline);
+
+    return () => {
+      observer.disconnect();
+    };
+  }, []);
 
   const queueJobs = useMemo(() => {
     const map = new Map(jobs.map((job) => [job.id, job]));
@@ -133,7 +169,7 @@ export function Trim() {
 
   const togglePlayback = async () => {
     const media = mediaRef.current;
-    if (!media) {
+    if (!media || !previewAvailable) {
       return;
     }
 
@@ -157,6 +193,14 @@ export function Trim() {
     syncRangeFromTimes(startSeconds, Math.max(currentTime, startSeconds + frameDuration));
   };
 
+  const seekToInPoint = () => {
+    seekTo(startSeconds);
+  };
+
+  const seekToOutPoint = () => {
+    seekTo(endSeconds);
+  };
+
   const stepByFrames = (direction: -1 | 1) => {
     const media = mediaRef.current;
     if (media) {
@@ -167,11 +211,11 @@ export function Trim() {
   };
 
   const handleTimelineSeek = (event: ReactMouseEvent<HTMLDivElement>) => {
-    if (!timelineRef.current || durationSeconds <= 0) {
+    if (!timelineStripRef.current || durationSeconds <= 0) {
       return;
     }
 
-    const rect = timelineRef.current.getBoundingClientRect();
+    const rect = timelineStripRef.current.getBoundingClientRect();
     const position = clampValue((event.clientX - rect.left) / rect.width, 0, 1);
     seekTo(position * durationSeconds);
   };
@@ -286,7 +330,11 @@ export function Trim() {
           <div className="space-y-6 p-[var(--surface-padding)]">
             <div className="overflow-hidden rounded-xl border bg-muted">
               {previewSrc ? (
-                activeFile?.kind === "audio" ? (
+                previewError ? (
+                  <div className="flex aspect-video items-center justify-center px-6 text-center text-sm text-muted-foreground">
+                    {previewError}
+                  </div>
+                ) : activeFile?.kind === "audio" ? (
                   <div className="space-y-4 p-[var(--surface-padding)]">
                     <audio
                       ref={(node) => {
@@ -298,10 +346,15 @@ export function Trim() {
                       className="w-full"
                       onTimeUpdate={(event) => setCurrentTime(event.currentTarget.currentTime)}
                       onLoadedMetadata={(event) => {
+                        setPreviewError(null);
                         setCurrentTime(event.currentTarget.currentTime);
                       }}
                       onPlay={() => setIsPlaying(true)}
                       onPause={() => setIsPlaying(false)}
+                      onError={() => {
+                        setIsPlaying(false);
+                        setPreviewError("Preview couldn't load. Restart the Tauri app after updating the asset protocol settings.");
+                      }}
                     />
                   </div>
                 ) : (
@@ -315,10 +368,15 @@ export function Trim() {
                     className="aspect-video w-full bg-black object-contain"
                     onTimeUpdate={(event) => setCurrentTime(event.currentTarget.currentTime)}
                     onLoadedMetadata={(event) => {
+                      setPreviewError(null);
                       setCurrentTime(event.currentTarget.currentTime);
                     }}
                     onPlay={() => setIsPlaying(true)}
                     onPause={() => setIsPlaying(false)}
+                    onError={() => {
+                      setIsPlaying(false);
+                      setPreviewError("Preview couldn't load. Restart the Tauri app after updating the asset protocol settings.");
+                    }}
                   />
                 )
               ) : (
@@ -329,43 +387,54 @@ export function Trim() {
             </div>
 
             <div className="flex flex-wrap items-center gap-2">
-              <Button variant="outline" size="sm" onClick={() => void togglePlayback()} disabled={!previewSrc} className="h-8 font-semibold">
+              <Button variant="outline" size="sm" onClick={() => void togglePlayback()} disabled={!previewAvailable} className="h-8 font-semibold">
                 {isPlaying ? <Pause className="mr-2 h-3 w-3 fill-current" /> : <Play className="mr-2 h-3 w-3 fill-current" />}
                 {isPlaying ? "Pause" : "Play"}
               </Button>
-              <Button variant="outline" size="sm" onClick={() => stepByFrames(-1)} disabled={!previewSrc} className="h-8 font-semibold">
+              <Button variant="outline" size="sm" onClick={() => stepByFrames(-1)} disabled={!previewAvailable} className="h-8 font-semibold">
                 <SkipBack className="mr-2 h-3 w-3 fill-current" /> Prev frame
               </Button>
-              <Button variant="outline" size="sm" onClick={() => stepByFrames(1)} disabled={!previewSrc} className="h-8 font-semibold">
+              <Button variant="outline" size="sm" onClick={() => stepByFrames(1)} disabled={!previewAvailable} className="h-8 font-semibold">
                 <SkipForward className="mr-2 h-3 w-3 fill-current" /> Next frame
               </Button>
               <div className="w-px h-6 bg-border mx-1" />
-              <Button variant="outline" size="sm" onClick={setInPoint} disabled={!previewSrc} className="h-8 font-semibold">
+              <Button variant="outline" size="sm" onClick={setInPoint} disabled={!previewAvailable} className="h-8 font-semibold">
                 Mark in
               </Button>
-              <Button variant="outline" size="sm" onClick={setOutPoint} disabled={!previewSrc} className="h-8 font-semibold">
+              <Button variant="outline" size="sm" onClick={setOutPoint} disabled={!previewAvailable} className="h-8 font-semibold">
                 Mark out
+              </Button>
+              <Button variant="outline" size="sm" onClick={seekToInPoint} disabled={!previewAvailable} className="h-8 font-semibold">
+                Go to in
+              </Button>
+              <Button variant="outline" size="sm" onClick={seekToOutPoint} disabled={!previewAvailable} className="h-8 font-semibold">
+                Go to out
               </Button>
               <div className="ml-auto rounded-full border border-border bg-muted px-3 py-1 text-[10px] font-bold text-muted-foreground tracking-tight">
                 frame {currentFrame}
               </div>
             </div>
 
-            <div
-              ref={timelineRef}
-              onClick={handleTimelineSeek}
-              className="surface-inset relative overflow-hidden bg-card"
-            >
-              <div className="pointer-events-none absolute inset-y-4 rounded-lg bg-accent/10" style={{ left: `${range[0]}%`, right: `${100 - range[1]}%` }} />
-              {waveformDataUrl ? (
-                <img src={waveformDataUrl} alt="Audio waveform" className="h-28 w-full rounded-xl object-cover opacity-80" />
-              ) : (
-                <div className="h-28 rounded-xl bg-[linear-gradient(90deg,transparent_0%,rgba(255,255,255,0.06)_25%,transparent_50%,rgba(255,255,255,0.06)_75%,transparent_100%)] bg-[length:24px_100%] bg-muted/40" />
-              )}
-              <div
-                className="pointer-events-none absolute inset-y-4 w-px bg-accent shadow-[0_0_0_1px_hsl(var(--accent)/0.3)]"
-                style={{ left: `${durationSeconds === 0 ? 0 : (currentTime / durationSeconds) * 100}%` }}
-              />
+            <div className="surface-inset relative overflow-hidden bg-card">
+              <div ref={timelineStripRef} onClick={handleTimelineSeek} className="relative">
+                <div
+                  className="pointer-events-none absolute inset-0 bg-accent/10"
+                  style={
+                    timelineWidth > 0
+                      ? { left: `${selectionLeft}px`, right: `${selectionRight}px` }
+                      : { left: `${range[0]}%`, right: `${100 - range[1]}%` }
+                  }
+                />
+                {waveformDataUrl ? (
+                  <img src={waveformDataUrl} alt="Audio waveform" className="h-28 w-full rounded-xl object-cover opacity-80" />
+                ) : (
+                  <div className="h-28 rounded-xl bg-[linear-gradient(90deg,transparent_0%,rgba(255,255,255,0.06)_25%,transparent_50%,rgba(255,255,255,0.06)_75%,transparent_100%)] bg-[length:24px_100%] bg-muted/40" />
+                )}
+                <div
+                  className="pointer-events-none absolute inset-y-0 w-px bg-accent shadow-[0_0_0_1px_hsl(var(--accent)/0.3)]"
+                  style={timelineWidth > 0 ? { left: `${playheadLeft}px` } : { left: `${playheadLeft}%` }}
+                />
+              </div>
               <div className="mt-4">
                 <Slider
                   value={range}
@@ -373,14 +442,42 @@ export function Trim() {
                   step={0.1}
                   minStepsBetweenValues={0.2}
                   onValueChange={(value) => setRange(value as number[])}
+                  thumbProps={[
+                    {
+                      onClick: (event) => {
+                        event.stopPropagation();
+                        seekToInPoint();
+                      },
+                    },
+                    {
+                      onClick: (event) => {
+                        event.stopPropagation();
+                        seekToOutPoint();
+                      },
+                    },
+                  ]}
                   className="w-full"
                   disabled={!activeFile || durationSeconds === 0}
                 />
               </div>
               <div className="mt-4 flex flex-wrap items-center justify-between gap-3 text-[11px] font-bold text-muted-foreground lowercase">
-                <span className="rounded bg-muted px-2 py-0.5">in {formatPreciseDuration(startSeconds)}</span>
+                <button
+                  type="button"
+                  onClick={seekToInPoint}
+                  disabled={!previewAvailable}
+                  className="rounded bg-muted px-2 py-0.5 transition-colors hover:bg-accent/10 hover:text-foreground disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  in {formatPreciseDuration(startSeconds)}
+                </button>
                 <span className="text-foreground font-bold">{formatDuration(clipDuration)} selection</span>
-                <span className="rounded bg-muted px-2 py-0.5">out {formatPreciseDuration(endSeconds)}</span>
+                <button
+                  type="button"
+                  onClick={seekToOutPoint}
+                  disabled={!previewAvailable}
+                  className="rounded bg-muted px-2 py-0.5 transition-colors hover:bg-accent/10 hover:text-foreground disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  out {formatPreciseDuration(endSeconds)}
+                </button>
               </div>
             </div>
           </div>
