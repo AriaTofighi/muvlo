@@ -265,7 +265,7 @@ export function Trim() {
   };
 
   return (
-    <div className="mx-auto max-w-4xl space-y-6 animate-in fade-in duration-500 transform-gpu translate-z-0">
+    <div className="mx-auto max-w-4xl space-y-6 animate-in fade-in duration-500 will-change-[opacity] backface-hidden">
       <div className="mb-6">
         <h2 className="text-3xl font-bold tracking-tight">Trim</h2>
       </div>
@@ -466,8 +466,8 @@ export function Trim() {
                         </Button>
                       )}
                       {!job && (
-                        <Button variant="ghost" size="icon" onClick={() => removeClip(clip.id)} className="h-8 w-8 text-muted-foreground hover:text-destructive transition-colors">
-                          <Trash2 className="h-4 w-4" />
+                        <Button variant="ghost" size="icon" onClick={() => removeClip(clip.id)} className="h-8 w-8 text-muted-foreground hover:bg-muted hover:text-foreground transition-colors">
+                          <Trash2 className="size-4" />
                         </Button>
                       )}
                     </div>

@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { FileVideo, Scissors, Minimize, Combine, Music, Type, Trash2, Clock, RefreshCw } from "lucide-react";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { FileDropZone } from "@/components/FileDropZone";
 import { Button } from "@/components/ui/button";
 import { useSourceFileActions } from "@/hooks/useSourceFileActions";
@@ -55,7 +55,9 @@ export function Home() {
   ];
 
   return (
-    <div className="mx-auto max-w-3xl space-y-6 animate-in fade-in duration-500 transform-gpu translate-z-0">
+    <div
+      className="mx-auto flex min-h-[calc(100dvh-8rem)] max-w-3xl flex-col justify-center gap-6 animate-in fade-in duration-500 will-change-[opacity] backface-hidden md:-translate-y-3 lg:-translate-y-5"
+    >
       {!tauriReady && (
         <Card className="border-destructive/50 bg-destructive/5">
           <CardContent className="space-y-1">
@@ -143,13 +145,13 @@ export function Home() {
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
         {workflows.map((workflow) => (
           <Link key={workflow.path} to={workflow.path} className="group">
-            <Card size="sm" className="h-full border border-border/40 transition hover:border-accent/30 hover:bg-accent/1">
-              <CardContent className="flex items-center gap-3">
-                <workflow.icon className="h-4 w-4 text-muted-foreground group-hover:text-accent transition-colors" />
-                <p className="text-sm font-bold text-foreground group-hover:text-accent transition-colors">
+            <Card size="sm" className="h-full hover:bg-accent/[0.03] transition-colors">
+              <CardHeader className="flex-row items-center gap-3 p-[var(--card-padding-block)]">
+                <workflow.icon className="size-4 text-muted-foreground group-hover:text-accent transition-colors" />
+                <CardTitle className="text-sm font-bold text-foreground group-hover:text-accent transition-colors m-0 leading-none">
                   {workflow.title}
-                </p>
-              </CardContent>
+                </CardTitle>
+              </CardHeader>
             </Card>
           </Link>
         ))}

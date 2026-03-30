@@ -49,8 +49,8 @@ export function SourceWorkspaceCard({
                   <RefreshCw className="mr-2 h-3 w-3" /> {replaceLabel}
                 </Button>
                 {onRemoveSource && (
-                  <Button variant="ghost" size="icon" onClick={onRemoveSource} className="h-8 w-8 text-muted-foreground hover:text-destructive hover:bg-destructive/5">
-                    <Trash2 className="h-4 w-4" />
+                  <Button variant="ghost" size="icon" onClick={onRemoveSource} className="h-8 w-8 text-muted-foreground hover:bg-muted hover:text-foreground transition-colors">
+                    <Trash2 className="size-4" />
                   </Button>
                 )}
               </div>

@@ -15,7 +15,7 @@ function LayoutContent() {
         <div className="md:hidden absolute top-4 left-4 z-50">
           <SidebarTrigger />
         </div>
-        <div className="flex-1 flex flex-col justify-center mx-auto w-full px-4 pb-12 pt-8 md:px-6 md:pt-10 lg:px-8 lg:pt-12">
+        <div className="flex-1 flex flex-col justify-start mx-auto w-full px-4 pb-12 pt-12 md:px-6 md:pt-16 lg:px-8 lg:pt-20">
           <div className="w-full">
             <Outlet />
           </div>

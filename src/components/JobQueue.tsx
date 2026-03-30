@@ -10,7 +10,6 @@ import {
 } from "@/components/ui/sheet";
 import { SidebarMenuButton, useSidebar } from "@/components/ui/sidebar";
 import { revealInExplorer } from "@/lib/media-client";
-import { cn } from "@/lib/utils";
 import { useJobStore } from "@/stores/jobStore";
 import { Check, Folder, ListVideo, Loader2, Play, Trash2, X, XCircle } from "lucide-react";
 
@@ -161,14 +160,11 @@ export function JobQueue() {
                         <Button
                           variant="ghost"
                           size="icon"
-                          className={cn(
-                            "h-8 w-8 hover:bg-muted hover:text-foreground",
-                            job.status === "failed" ? "text-destructive hover:bg-destructive/10 hover:text-destructive" : "text-muted-foreground",
-                          )}
+                          className="h-8 w-8 text-muted-foreground hover:bg-muted hover:text-foreground"
                           onClick={() => removeJob(job.id)}
                           title="Remove"
                         >
-                          <Trash2 className="h-4 w-4" />
+                          <Trash2 className="size-4" />
                         </Button>
                       </div>
                     </div>

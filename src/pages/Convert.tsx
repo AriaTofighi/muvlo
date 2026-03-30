@@ -215,7 +215,7 @@ export function Convert() {
   };
 
   return (
-    <div className="mx-auto max-w-3xl space-y-6 animate-in fade-in duration-500 transform-gpu translate-z-0">
+    <div className="mx-auto max-w-3xl space-y-6 animate-in fade-in duration-500 will-change-[opacity] backface-hidden">
       <div className="mb-6">
         <h2 className="text-3xl font-bold tracking-tight">Convert</h2>
       </div>
@@ -232,7 +232,7 @@ export function Convert() {
       />
 
       <Card size="lg" className="relative overflow-visible">
-        <CardContent className="space-y-4">
+        <CardContent className="space-y-6">
           <div className="space-y-4">
             {/* Format pill buttons and Advanced toggle */}
             <div className="flex items-start justify-between gap-4">
@@ -245,11 +245,11 @@ export function Convert() {
                     variant={format === fmt ? "default" : "outline"}
                     size="sm"
                     className={cn(
-                      "rounded-full px-4 text-[13px] font-bold",
+                      "rounded-full px-4 text-[13px] font-bold leading-none",
                       format !== fmt && "text-muted-foreground",
                     )}
                   >
-                    {fmt}
+                    <span className="relative -top-px">{fmt}</span>
                   </Button>
                 ))}
               </div>
@@ -261,11 +261,11 @@ export function Convert() {
                   variant={showAdvanced ? "default" : "outline"}
                   size="sm"
                   className={cn(
-                    "shrink-0 rounded-full px-3.5 text-[12px] font-semibold shadow-none",
+                    "shrink-0 rounded-full px-3.5 text-[12px] font-semibold leading-none shadow-none",
                     !showAdvanced && "text-muted-foreground",
                   )}
                 >
-                  <span>{showAdvanced ? "Hide settings" : "Advanced"}</span>
+                  <span className="relative -top-px">{showAdvanced ? "Hide settings" : "Advanced"}</span>
                   {showAdvanced ? (
                     <ChevronUp size={10} strokeWidth={3} className="opacity-70" />
                   ) : (
@@ -276,14 +276,14 @@ export function Convert() {
             </div>
 
             <div className="grid gap-2">
-              <div className="flex flex-row gap-2">
+              <div className="flex flex-col gap-2 sm:flex-row">
                 <Input
                   value={outputPath}
                   onChange={(event) => setOutputPath(event.target.value)}
                   placeholder="Choose where to save the converted file"
                   className="flex-1 font-medium placeholder:font-normal h-10 shadow-none border-border/40"
                 />
-                <Button variant="outline" onClick={() => void handleChooseOutput()} disabled={!activeFile} className="shrink-0 font-medium h-10 gap-2.5 px-5 border-border/50 shadow-none">
+                <Button variant="outline" onClick={() => void handleChooseOutput()} disabled={!activeFile} className="shrink-0 font-medium h-10 gap-2.5 px-5 border-border/50 shadow-none sm:self-auto">
                   <Play className="h-4 w-4" /> Choose
                 </Button>
               </div>
@@ -295,7 +295,7 @@ export function Convert() {
               {guidance && <OutputGuidanceContent guidance={guidance} className="py-0 px-0" />}
 
               {supportsAdvancedSettings && advancedFieldKind && showAdvanced && (
-                <div className="grid grid-cols-2 gap-4 pt-2 animate-in fade-in slide-in-from-top-2 duration-300">
+                <div className="grid gap-4 pt-2 animate-in fade-in slide-in-from-top-2 duration-300 md:grid-cols-2">
                   {advancedFieldKind === "video" && (
                     <>
                       <Field label="video codec">
@@ -349,6 +349,7 @@ export function Convert() {
           <Play className="h-4 w-4" /> Start Conversion
         </Button>
       </div>
+
     </div>
   );
 }
